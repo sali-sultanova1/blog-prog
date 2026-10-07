@@ -1,10 +1,11 @@
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponseForbidden, HttpResponseNotAllowed
 from .forms import ArticleForm, ModerationForm
 from .models import Article, ModerationRecord
 from django.db import transaction
+from django.contrib.auth.models import Group
 
 @login_required
 def create_article_view(request):
@@ -24,11 +25,13 @@ def create_article_view(request):
     
     return render(request, "create_article.html", {"form": form})
 
+@permission_required("articles.view_article", raise_exception=True)
 @login_required
 def my_articles_view(request):
     articles = Article.objects.filter(author = request.user).order_by("-created_at")
     return render(request, "my_articles.html", {"articles": articles})
 
+@permission_required("articles.change_article", raise_exception=True)
 @login_required
 def edit_my_article_view(request, pk):
     article = get_object_or_404(Article, pk=pk, author=request.user)
@@ -49,6 +52,7 @@ def edit_my_article_view(request, pk):
     return render(request, "edit_my_article.html", {"form": form, "article": article})
 
 
+@permission_required("articles.change_article", raise_exception=True)
 @login_required
 def submit_article_view(request, pk):
     if request.method != "POST":
@@ -109,3 +113,27 @@ def moderation_queue_view(request):
     articles = Article.objects.filter(status=Article.Status.SUBMITTED).order_by("submitted_at")
     
     return render(request, "moderation_queue.html", {"articles": articles})
+
+
+@login_required
+def become_author_view(request):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+
+    authors_group = Group.objects.get(name="Authors")
+    request.user.groups.add(authors_group)
+
+    AuthorProfile.objects.get_or_create(user=request.user)
+
+    return redirect("profile")
+
+@login_required
+@permission_required("articles.delete_article", raise_exception=True)
+def delete_article_view(request, pk):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+
+    article = get_object_or_404(Article, pk=pk, author=request.user)
+    article.delete()
+
+    return redirect("my_articles")

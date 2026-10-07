@@ -5,3 +5,22 @@
 <p>Биография: {{ user.bio }}</p>
 
 <a href="{% url 'edit_profile' %}">Редактировать профиль</a>
+
+{% if not perms.articles.add_article %}
+    <form method="post" action="{% url 'become_author' %}">
+        {% csrf_token %}
+        <button type="submit">Стать автором</button>
+    </form>
+{% else %}
+    <p>
+        <a href="{% url 'my_articles' %}">
+            Мои статьи
+        </a>
+    </p>
+
+    <p>
+        <a href="{% url 'create_article' %}">
+            Создать статью
+        </a>
+    </p>
+{% endif %}
