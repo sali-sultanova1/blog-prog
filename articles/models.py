@@ -25,8 +25,8 @@ class Article(models.Model):
         REJECTED = "rejected", "Отклонено"
 
     
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name="Автор", related_name='authored_articles', models.PROTECT)
-    category = models.ForeignKey(Category, verbose_name="Категории", related_name='articles', on_delete=models.CASCADE)
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name="Автор", related_name='authored_articles', on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, verbose_name="Категории", related_name='articles', models.PROTECT)
     tags = models.ManyToManyField(Tag, verbose_name="Тэг", related_name='articles')
 
     title = models.CharField(max_length=200, verbose_name="Название")
