@@ -15,4 +15,8 @@ def register_view(request):
     return render(request, 'register.html', {"form": form})
 
 
+@login_required
+def profile_view(request):
+    return render(request, "profile.html")
 
+  
