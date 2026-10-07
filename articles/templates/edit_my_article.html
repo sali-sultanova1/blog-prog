@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактирование статьи</title>
+</head>
+<body>
+    <h1>Редактировать статью</h1>
+
+    <p>Статья: {{ article.title }}</p>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <button type="submit">Сохранить изменения</button>
+    </form>
+
+    <a href="{% url 'my_articles' %}">
+        Назад к моим статьям
+    </a>
+</body>
+</html>

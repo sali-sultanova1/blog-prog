@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мои статьи</title>
+</head>
+<body>
+    <h1>Мои статьи</h1>
+
+    <a href="{% url 'create_article' %}">Создать статью</a>
+
+    <hr>
+
+    {% for article in articles %}
+        <article>
+            <h2>{{ article.title }}</h2>
+
+            <p>
+                Статус:
+                {{ article.get_status_display }}
+            </p>
+
+            <p>
+                Создано:
+                {{ article.created_at|date:"d.m.Y H:i" }}
+            </p>
+
+            {% if article.summary %}
+                <p>{{ article.summary }}</p>
+            {% endif %}
+
+            {% if article.status == "draft" or article.status == "rejected" %}
+                <p>
+                    <a href="{% url 'edit_article' article.pk %}">
+                        Редактировать
+                    </a>
+                </p>
+
+                <form method="post" action="{% url 'submit_article' article.pk %}">
+                    {% csrf_token %}
+                    <button type="submit">Отправить на модерацию</button>
+                </form>
+            {% endif %}
+        </article>
+
+        <hr>
+    {% empty %}
+        <p>У вас пока нет статей.</p>
+    {% endfor %}
+</body>
+</html>
