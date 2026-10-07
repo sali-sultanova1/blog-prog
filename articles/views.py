@@ -8,6 +8,7 @@ from django.db import transaction
 from django.contrib.auth.models import Group
 
 @login_required
+@permission_required("articles.add_article", raise_exception=True)
 def create_article_view(request):
     if request.method == 'POST':
         form = ArticleForm(request.POST, request.FILES)
@@ -25,14 +26,14 @@ def create_article_view(request):
     
     return render(request, "create_article.html", {"form": form})
 
-@permission_required("articles.view_article", raise_exception=True)
 @login_required
+@permission_required("articles.view_article", raise_exception=True)
 def my_articles_view(request):
     articles = Article.objects.filter(author = request.user).order_by("-created_at")
     return render(request, "my_articles.html", {"articles": articles})
 
-@permission_required("articles.change_article", raise_exception=True)
 @login_required
+@permission_required("articles.change_article", raise_exception=True)
 def edit_my_article_view(request, pk):
     article = get_object_or_404(Article, pk=pk, author=request.user)
     if article.status not in (Article.Status.DRAFT, Article.Status.REJECTED):
@@ -52,8 +53,8 @@ def edit_my_article_view(request, pk):
     return render(request, "edit_my_article.html", {"form": form, "article": article})
 
 
-@permission_required("articles.change_article", raise_exception=True)
 @login_required
+@permission_required("articles.change_article", raise_exception=True)
 def submit_article_view(request, pk):
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])

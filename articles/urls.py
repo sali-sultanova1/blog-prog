@@ -10,5 +10,9 @@ urlpatterns = [
     path("moderation/", moderation_queue_view, name="moderation_queue"),
     path("become-author/", become_author_view, name="become_author"),
     path("<int:pk>/delete/", delete_article_view, name="delete_article"),
+    path("", article_list_view, name="article_list"),
+
     
+    path("<slug:slug>/", article_detail_view, name="article_detail"),
+
 ]
