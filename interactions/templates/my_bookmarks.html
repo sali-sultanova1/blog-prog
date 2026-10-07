@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мои закладки</title>
+</head>
+<body>
+
+    <h1>Мои закладки</h1>
+
+    {% for bookmark in bookmarks %}
+        <article>
+            <h2>
+                <a href="{% url 'article_detail' bookmark.article.slug %}">
+                    {{ bookmark.article.title }}
+                </a>
+            </h2>
+
+            <p>
+                Автор: {{ bookmark.article.author.username }}
+            </p>
+
+            <p>
+                Добавлено в закладки:
+                {{ bookmark.created_at|date:"d.m.Y H:i" }}
+            </p>
+
+            <p>
+                {{ bookmark.article.summary }}
+            </p>
+
+            <a href="{% url 'article_detail' bookmark.article.slug %}">
+                Читать статью
+            </a>
+
+            <form
+                method="post"
+                action="{% url 'toggle_bookmark' bookmark.article.slug %}"
+            >
+                {% csrf_token %}
+                <button type="submit">
+                    Убрать из закладок
+                </button>
+            </form>
+        </article>
+
+        <hr>
+
+    {% empty %}
+        <p>У вас пока нет сохранённых статей.</p>
+    {% endfor %}
+
+</body>
+</html>

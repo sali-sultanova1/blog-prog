@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактирование комментария</title>
+</head>
+<body>
+
+    <h1>Редактировать комментарий</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <button type="submit">Сохранить изменения</button>
+    </form>
+
+    <p>
+        <a href="{% url 'article_detail' comment.article.slug %}">
+            Назад к статье
+        </a>
+    </p>
+
+</body>
+</html>

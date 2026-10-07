@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import create_article_view, my_articles_view, edit_my_article_view, submit_article_view, moderate_article_view, moderation_queue_view, become_author_view, delete_article_view
+from .views import create_article_view, my_articles_view, edit_my_article_view, submit_article_view, moderate_article_view, moderation_queue_view, become_author_view, delete_article_view, article_list_view, article_detail_view
 
 urlpatterns = [
     path("create/", create_article_view, name="create_article"),

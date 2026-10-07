@@ -6,6 +6,7 @@ from .forms import ArticleForm, ModerationForm
 from .models import Article, ModerationRecord
 from django.db import transaction
 from django.contrib.auth.models import Group
+from accounts.models import AuthorProfile
 
 @login_required
 @permission_required("articles.add_article", raise_exception=True)
@@ -138,3 +139,24 @@ def delete_article_view(request, pk):
     article.delete()
 
     return redirect("my_articles")
+
+
+def article_list_view(request):
+    articles = Article.objects.filter(status=Article.Status.PUBLISHED).select_related("author").prefetch_related("categories", "tags").order_by("-published_at")
+    
+    return render(request, "article_list.html", {"articles": articles})
+
+
+def article_detail_view(request, slug):
+    article = get_object_or_404(Article.objects.select_related("author").prefetch_related("categories", "tags"), slug=slug, status=Article.Status.PUBLISHED)
+    comments = article.comments.select_related("user").order_by("-created_at")
+
+    is_liked = False
+    is_bookmarked = False
+
+    if request.user.is_authenticated:
+        is_liked = article.likes.filter(user=request.user).exists()
+        is_bookmarked = article.bookmarks.filter(user=request.user).exists()
+
+    return render(request, "article_detail.html", {"article": article, "comments": comments, "comment_form": CommentForm(), "is_liked": is_liked, "is_bookmarked": is_bookmarked})
+
