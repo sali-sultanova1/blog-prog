@@ -3,7 +3,7 @@ from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponseForbidden, HttpResponseNotAllowed
 from .forms import ArticleForm, ModerationForm
-from .models import Article
+from .models import Article, ModerationRecord
 from django.db import transaction
 
 @login_required
@@ -93,9 +93,19 @@ def moderate_article_view(request, pk):
                 moderation.save()
 
 
-            return redirect("moderate_article")
+            return redirect("moderation_queue")
     
     else:
         form = ModerationForm()
     
     return render(request, "moderate_article.html", {"form": form, "article": article})
+
+
+@login_required
+def moderation_queue_view(request):
+    if not request.user.is_staff:
+        return HttpResponseForbidden("У вас нет доступа")
+    
+    articles = Article.objects.filter(status=Article.Status.SUBMITTED).order_by("submitted_at")
+    
+    return render(request, "moderation_queue.html", {"articles": articles})
