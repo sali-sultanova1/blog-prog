@@ -1,8 +1,10 @@
-from django.shortcuts import render, redirect
-from .forms import ArticleForm
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden
 from django.utils import timezone
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponseForbidden, HttpResponseNotAllowed
+from .forms import ArticleForm, ModerationForm
+from .models import Article
+from django.db import transaction
 
 @login_required
 def create_article_view(request):
@@ -62,3 +64,38 @@ def submit_article_view(request, pk):
     article.save()
 
     return redirect("my_articles")
+
+
+@login_required
+def moderate_article_view(request, pk):
+    if not request.user.is_staff:
+        return HttpResponseForbidden("У вас нет доступа")
+    
+    article = get_object_or_404(Article, pk=pk, status=Article.Status.SUBMITTED)
+
+    if request.method == 'POST':
+        form = ModerationForm(request.POST)
+
+        if form.is_valid():
+            with transaction.atomic():
+                moderation = form.save(commit=False)
+
+                moderation.article = article
+                moderation.moderator = request.user
+
+                if moderation.decision == ModerationRecord.Decision.PUBLISHED:
+                    article.status = Article.Status.PUBLISHED
+                    article.published_at = timezone.now()
+                else:
+                    article.status = Article.Status.REJECTED
+
+                article.save()
+                moderation.save()
+
+
+            return redirect("moderate_article")
+    
+    else:
+        form = ModerationForm()
+    
+    return render(request, "moderate_article.html", {"form": form, "article": article})
