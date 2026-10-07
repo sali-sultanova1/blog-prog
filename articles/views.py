@@ -7,6 +7,7 @@ from .models import Article, ModerationRecord
 from django.db import transaction
 from django.contrib.auth.models import Group
 from accounts.models import AuthorProfile
+from interactions.forms import CommentForm
 
 @login_required
 @permission_required("articles.add_article", raise_exception=True)
