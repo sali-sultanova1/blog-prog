@@ -3,3 +3,5 @@
 <p>Имя пользователя: {{ user.username }}</p>
 <p>Email: {{ user.email }}</p>
 <p>Биография: {{ user.bio }}</p>
+
+<a href="{% url 'edit_profile' %}">Редактировать профиль</a>
