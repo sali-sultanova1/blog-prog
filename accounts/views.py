@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from .forms import RegisterForm
+from django.contrib.auth.decorators import login_required
 
 def register_view(request):
     if request.method == 'POST':
