@@ -5,11 +5,25 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from interactions.models import Like, Bookmark
-from .models import Article
-from .serializers import ArticleSerializer
-from .api_permissions import ArticleAPIPermission
+from .models import Article, Category, Tag
+from .serializers import ArticleSerializer, CategorySerializer, TagSerializer
+from .api_permissions import ArticleAPIPermission, AdminWritePermission
 from .filters import ArticleFilter
 
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all().order_by("name")
+    serializer_class = CategorySerializer
+    permission_classes = [AdminWritePermission]
+    search_fields = ["name", "description"]
+    ordering_fields = ["name"]
+
+
+class TagViewSet(viewsets.ModelViewSet):
+    queryset = Tag.objects.all().order_by("name")
+    serializer_class = TagSerializer
+    permission_classes = [AdminWritePermission]
+    search_fields = ["name"]
+    ordering_fields = ["name"]
 
 class ArticleViewSet(viewsets.ModelViewSet):
     serializer_class = ArticleSerializer

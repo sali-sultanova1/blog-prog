@@ -2,11 +2,13 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-from articles.api_views import ArticleViewSet
 from interactions.api_views import CommentViewSet
+from articles.api_views import ArticleViewSet, CategoryViewSet, TagViewSet
 
 router = DefaultRouter()
 router.register("articles", ArticleViewSet, basename="api-article")
+router.register("categories", CategoryViewSet, basename="api-category")
+router.register("tags", TagViewSet, basename="api-tag")
 router.register("comments", CommentViewSet, basename="api-comment")
 
 urlpatterns = [
