@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'rest_framework',
     'django_filters',
+    'drf_spectacular',
 
 ]
 
@@ -200,4 +201,12 @@ REST_FRAMEWORK = {
 
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
+
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "News Platform API",
+    "DESCRIPTION": "REST API for articles, comments, likes and bookmarks.",
+    "VERSION": "1.0.0",
 }
