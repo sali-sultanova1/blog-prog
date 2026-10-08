@@ -1,5 +1,5 @@
 from rest_framework import viewsets
-
+from articles.models import Article
 from .models import Comment
 from .serializers import CommentSerializer
 from .api_permissions import CommentAPIPermission
@@ -13,11 +13,13 @@ class CommentViewSet(viewsets.ModelViewSet):
     ordering_fields = ["created_at", "updated_at"]
     ordering = ["-created_at"]
 
-    queryset = (
-        Comment.objects
-        .select_related("user", "article")
-        .order_by("-created_at")
-    )
+    def get_queryset(self):
+        return (
+            Comment.objects
+            .filter(article__status=Article.Status.PUBLISHED)
+            .select_related("user", "article")
+            .order_by("-created_at")
+        )
 
     def perform_create(self, serializer):
         serializer.save(

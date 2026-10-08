@@ -6,3 +6,4 @@ redis
 django-debug-toolbar
 djangorestframework
 django-filter
+djangorestframework-simplejwt
