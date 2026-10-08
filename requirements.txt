@@ -3,3 +3,4 @@ Django
 psycopg[binary]
 django-environ
 redis
+django-debug-toolbar
