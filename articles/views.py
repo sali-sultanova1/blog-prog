@@ -3,7 +3,6 @@ from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponseForbidden, HttpResponseNotAllowed
 from .forms import ArticleForm, ModerationForm
-from .models import Article, ModerationRecord
 from django.db import transaction
 from django.contrib.auth.models import Group
 from accounts.models import AuthorProfile
@@ -171,7 +170,7 @@ def article_list_view(request):
     categories = Category.objects.all()
     tags = Tag.objects.all()
 
-    return render(request, "article_list.html", {"articles": articles, "categories": categories, "tags": tags, "query": query, "selected_category": category_slug, "selected_tag": tag_slug,})
+    return render(request, "article_list.html", {"articles": articles, "categories": categories, "tags": tags, "query": query, "selected_category": category_slug, "selected_tag": tag_slug})
 
 
 def article_detail_view(request, slug):

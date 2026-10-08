@@ -1,6 +1,12 @@
 from django.shortcuts import render, redirect
 from .forms import RegisterForm, ProfileForm
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect, get_object_or_404
+from .forms import RegisterForm, ProfileForm
+from .models import AuthorProfile
+from articles.models import Article
+from django.contrib.auth.decorators import login_required
+from django.db.models import Count
 
 def register_view(request):
     if request.method == 'POST':
@@ -38,4 +44,10 @@ def edit_profile_view(request):
 def author_profile_view(request, username):
     author_profile = get_object_or_404(AuthorProfile, user__username=username)
     articles = Article.objects.filter(author=author_profile.user, status=Article.Status.PUBLISHED).order_by("-published_at")
-    return render(request, "author_profile.html", {"author_profile": author_profile, "articles": articles})
+    stats = articles.aggregate(
+        total_likes=Count("likes", distinct=True),
+        total_comments=Count("comments", distinct=True),
+    )
+
+    articles_count = articles.count()
+    return render(request, "author_profile.html", {"author_profile": author_profile, "articles": articles, "stats": stats, "articles_count": articles_count,})
