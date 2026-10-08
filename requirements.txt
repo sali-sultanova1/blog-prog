@@ -2,3 +2,4 @@ Pillow
 Django
 psycopg[binary]
 django-environ
+redis

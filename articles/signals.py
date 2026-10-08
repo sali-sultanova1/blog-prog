@@ -1,6 +1,8 @@
 from django.contrib.auth.models import Group, Permission
-from django.db.models.signals import post_migrate
+from django.db.models.signals import post_migrate, post_save, post_delete
 from django.dispatch import receiver
+from django.core.cache import cache
+from .models import Category, Tag
 
 @receiver(post_migrate)
 def create_authors_group(sender, **kwargs):
@@ -21,3 +23,12 @@ def create_authors_group(sender, **kwargs):
     )
 
     group.permissions.set(permissions)
+
+
+@receiver([post_save, post_delete], sender=Category)
+def clear_category_cache(sender, **kwargs):
+    cache.delete("article_categories")
+
+@receiver([post_save, post_delete], sender=Tag)
+def clear_tag_cache(sender, **kwargs):
+    cache.delete("article_tags")

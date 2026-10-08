@@ -9,6 +9,7 @@ from accounts.models import AuthorProfile
 from interactions.forms import CommentForm
 from django.db.models import Q, Count
 from .models import Article, ModerationRecord, Category, Tag
+from django.core.cache import cache
 
 @login_required
 @permission_required("articles.add_article", raise_exception=True)
@@ -167,8 +168,8 @@ def article_list_view(request):
         comments_count=Count("comments", distinct=True),
     )
     articles = articles.distinct().order_by("-published_at")
-    categories = Category.objects.all()
-    tags = Tag.objects.all()
+    categories = cache.get_or_set("article_categories", lambda: list(Category.objects.all()), 300,)
+    tags = cache.get_or_set("article_tags", lambda: list(Tag.objects.all()), 300,)
 
     return render(request, "article_list.html", {"articles": articles, "categories": categories, "tags": tags, "query": query, "selected_category": category_slug, "selected_tag": tag_slug})
 
