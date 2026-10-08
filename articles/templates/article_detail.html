@@ -18,7 +18,14 @@
         <h1>{{ article.title }}</h1>
 
         <p>
-            Автор: {{ article.author.username }}
+            Автор:
+            {% if user.is_authenticated %}
+                <a href="{% url 'author_profile' article.author.username %}">
+                    {{ article.author.username }}
+                </a>
+            {% else %}
+                {{ article.author.username }}
+            {% endif %}
         </p>
 
         <p>
@@ -158,12 +165,6 @@
                 {{ comment.created_at|date:"d.m.Y H:i" }}
             </p>
 
-            {% if comment.updated_at != comment.created_at %}
-                <p>
-                    Изменено:
-                    {{ comment.updated_at|date:"d.m.Y H:i" }}
-                </p>
-            {% endif %}
 
             {% if user.is_authenticated and comment.user == user %}
 

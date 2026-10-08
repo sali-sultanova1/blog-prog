@@ -8,5 +8,6 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(), name="logout"),
     path("profile/", profile_view, name="profile"),
     path("profile/edit/", edit_profile_view, name="edit_profile"),
-    
+    path("authors/<str:username>/", author_profile_view, name="author_profile"),
+
 ]

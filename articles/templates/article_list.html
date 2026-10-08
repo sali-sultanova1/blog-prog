@@ -9,6 +9,59 @@
 
     <h1>Статьи</h1>
 
+    <form method="get">
+        <div>
+            <label for="q">Поиск</label>
+            <input
+                type="text"
+                id="q"
+                name="q"
+                value="{{ query }}"
+                placeholder="Поиск по статьям"
+            >
+        </div>
+
+        <div>
+            <label for="category">Категория</label>
+            <select id="category" name="category">
+                <option value="">Все категории</option>
+
+                {% for category in categories %}
+                    <option
+                        value="{{ category.slug }}"
+                        {% if selected_category == category.slug %}selected{% endif %}
+                    >
+                        {{ category.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label for="tag">Тег</label>
+            <select id="tag" name="tag">
+                <option value="">Все теги</option>
+
+                {% for tag in tags %}
+                    <option
+                        value="{{ tag.slug }}"
+                        {% if selected_tag == tag.slug %}selected{% endif %}
+                    >
+                        {{ tag.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit">Найти</button>
+
+        <a href="{% url 'article_list' %}">
+            Сбросить фильтры
+        </a>
+    </form>
+
+    <hr>
+
     {% for article in articles %}
         <article>
 
@@ -27,12 +80,25 @@
             </h2>
 
             <p>
-                Автор: {{ article.author.username }}
+                Автор:
+                {% if user.is_authenticated %}
+                    <a href="{% url 'author_profile' article.author.username %}">
+                        {{ article.author.username }}
+                    </a>
+                {% else %}
+                    {{ article.author.username }}
+                {% endif %}
             </p>
 
             <p>
                 Опубликовано:
                 {{ article.published_at|date:"d.m.Y H:i" }}
+            </p>
+
+            <p>
+                Лайков: {{ article.likes_count }}
+                ·
+                Комментариев: {{ article.comments_count }}
             </p>
 
             <p>
@@ -61,16 +127,18 @@
                 {% endfor %}
             </p>
 
-            <a href="{% url 'article_detail' article.slug %}">
-                Читать статью
-            </a>
+            <p>
+                <a href="{% url 'article_detail' article.slug %}">
+                    Читать статью
+                </a>
+            </p>
 
         </article>
 
         <hr>
 
     {% empty %}
-        <p>Опубликованных статей пока нет.</p>
+        <p>По вашему запросу статьи не найдены.</p>
     {% endfor %}
 
 </body>

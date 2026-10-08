@@ -8,6 +8,8 @@ from django.db import transaction
 from django.contrib.auth.models import Group
 from accounts.models import AuthorProfile
 from interactions.forms import CommentForm
+from django.db.models import Q, Count
+from .models import Article, ModerationRecord, Category, Tag
 
 @login_required
 @permission_required("articles.add_article", raise_exception=True)
@@ -143,9 +145,33 @@ def delete_article_view(request, pk):
 
 
 def article_list_view(request):
-    articles = Article.objects.filter(status=Article.Status.PUBLISHED).select_related("author").prefetch_related("categories", "tags").order_by("-published_at")
+    query = request.GET.get("q", "")
+    category_slug = request.GET.get("category", "")
+    tag_slug = request.GET.get("tag", "")
     
-    return render(request, "article_list.html", {"articles": articles})
+    articles = Article.objects.filter(status=Article.Status.PUBLISHED).select_related("author").prefetch_related("categories", "tags")
+    if query:
+        articles = articles.filter(
+            Q(title__icontains=query)
+            | Q(summary__icontains=query)
+            | Q(content__icontains=query)
+        )
+    
+    if category_slug:
+        articles = articles.filter(categories__slug=category_slug)
+    
+    if tag_slug:
+        articles = articles.filter(tags__slug=tag_slug)
+
+    articles = articles.annotate(
+        likes_count=Count("likes", distinct=True),
+        comments_count=Count("comments", distinct=True),
+    )
+    articles = articles.distinct().order_by("-published_at")
+    categories = Category.objects.all()
+    tags = Tag.objects.all()
+
+    return render(request, "article_list.html", {"articles": articles, "categories": categories, "tags": tags, "query": query, "selected_category": category_slug, "selected_tag": tag_slug,})
 
 
 def article_detail_view(request, slug):
