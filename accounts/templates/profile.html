@@ -1,17 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Профиль{% endblock %}
+
+{% block content %}
+
 <h1>Профиль</h1>
 
-<p>Имя пользователя: {{ user.username }}</p>
-<p>Email: {{ user.email }}</p>
-<p>Биография: {{ user.bio }}</p>
+{% if user.avatar %}
+    <img
+        src="{{ user.avatar.url }}"
+        alt="{{ user.username }}"
+        style="max-width: 200px;"
+    >
+{% endif %}
 
-<a href="{% url 'edit_profile' %}">Редактировать профиль</a>
+<p>
+    <strong>Имя пользователя:</strong>
+    {{ user.username }}
+</p>
+
+<p>
+    <strong>Email:</strong>
+    {{ user.email }}
+</p>
+
+{% if user.first_name or user.last_name %}
+    <p>
+        <strong>Имя:</strong>
+        {{ user.first_name }} {{ user.last_name }}
+    </p>
+{% endif %}
+
+{% if user.bio %}
+    <p>
+        <strong>Биография:</strong>
+        {{ user.bio }}
+    </p>
+{% endif %}
+
+<p>
+    <a href="{% url 'edit_profile' %}">
+        Редактировать профиль
+    </a>
+</p>
+
+<p>
+    <a href="{% url 'my_bookmarks' %}">
+        Мои закладки
+    </a>
+</p>
 
 {% if not perms.articles.add_article %}
+
     <form method="post" action="{% url 'become_author' %}">
         {% csrf_token %}
-        <button type="submit">Стать автором</button>
+
+        <button type="submit">
+            Стать автором
+        </button>
     </form>
+
 {% else %}
+
     <p>
         <a href="{% url 'my_articles' %}">
             Мои статьи
@@ -26,8 +76,4 @@
 
 {% endif %}
 
-    <p>
-        <a href="{% url 'my_bookmarks' %}">
-            Мои закладки
-        </a>
-    </p>
+{% endblock %}

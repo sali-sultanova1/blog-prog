@@ -1,145 +1,162 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Статьи</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-    <h1>Статьи</h1>
+{% block title %}
+Статьи
+{% endblock %}
 
-    <form method="get">
-        <div>
-            <label for="q">Поиск</label>
-            <input
-                type="text"
-                id="q"
-                name="q"
-                value="{{ query }}"
-                placeholder="Поиск по статьям"
-            >
-        </div>
+{% block content %}
 
-        <div>
-            <label for="category">Категория</label>
-            <select id="category" name="category">
-                <option value="">Все категории</option>
+<h1>Статьи</h1>
 
-                {% for category in categories %}
-                    <option
-                        value="{{ category.slug }}"
-                        {% if selected_category == category.slug %}selected{% endif %}
-                    >
-                        {{ category.name }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
+<form method="get">
 
-        <div>
-            <label for="tag">Тег</label>
-            <select id="tag" name="tag">
-                <option value="">Все теги</option>
+    <div>
+        <label for="q">Поиск</label>
 
-                {% for tag in tags %}
-                    <option
-                        value="{{ tag.slug }}"
-                        {% if selected_tag == tag.slug %}selected{% endif %}
-                    >
-                        {{ tag.name }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
+        <input
+            type="text"
+            id="q"
+            name="q"
+            value="{{ query }}"
+            placeholder="Поиск по статьям"
+        >
+    </div>
 
-        <button type="submit">Найти</button>
+    <div>
+        <label for="category">Категория</label>
 
-        <a href="{% url 'article_list' %}">
-            Сбросить фильтры
-        </a>
-    </form>
+        <select id="category" name="category">
+            <option value="">Все категории</option>
 
-    <hr>
-
-    {% for article in articles %}
-        <article>
-
-            {% if article.cover_image %}
-                <img
-                    src="{{ article.cover_image.url }}"
-                    alt="{{ article.title }}"
-                    style="max-width: 400px;"
+            {% for category in categories %}
+                <option
+                    value="{{ category.slug }}"
+                    {% if selected_category == category.slug %}selected{% endif %}
                 >
-            {% endif %}
-
-            <h2>
-                <a href="{% url 'article_detail' article.slug %}">
-                    {{ article.title }}
-                </a>
-            </h2>
-
-            <p>
-                Автор:
-                {% if user.is_authenticated %}
-                    <a href="{% url 'author_profile' article.author.username %}">
-                        {{ article.author.username }}
-                    </a>
-                {% else %}
-                    {{ article.author.username }}
-                {% endif %}
-            </p>
-
-            <p>
-                Опубликовано:
-                {{ article.published_at|date:"d.m.Y H:i" }}
-            </p>
-
-            <p>
-                Лайков: {{ article.likes_count }}
-                ·
-                Комментариев: {{ article.comments_count }}
-            </p>
-
-            <p>
-                {{ article.summary }}
-            </p>
-
-            <p>
-                <strong>Категории:</strong>
-
-                {% for category in article.categories.all %}
                     {{ category.name }}
-                    {% if not forloop.last %}, {% endif %}
-                {% empty %}
-                    Не указаны
-                {% endfor %}
-            </p>
+                </option>
+            {% endfor %}
+        </select>
+    </div>
 
-            <p>
-                <strong>Теги:</strong>
+    <div>
+        <label for="tag">Тег</label>
 
-                {% for tag in article.tags.all %}
+        <select id="tag" name="tag">
+            <option value="">Все теги</option>
+
+            {% for tag in tags %}
+                <option
+                    value="{{ tag.slug }}"
+                    {% if selected_tag == tag.slug %}selected{% endif %}
+                >
                     {{ tag.name }}
-                    {% if not forloop.last %}, {% endif %}
-                {% empty %}
-                    Не указаны
-                {% endfor %}
-            </p>
+                </option>
+            {% endfor %}
+        </select>
+    </div>
 
-            <p>
-                <a href="{% url 'article_detail' article.slug %}">
-                    Читать статью
+    <button type="submit">
+        Найти
+    </button>
+
+    <a href="{% url 'article_list' %}">
+        Сбросить фильтры
+    </a>
+
+</form>
+
+<hr>
+
+{% for article in articles %}
+
+    <article>
+
+        {% if article.cover_image %}
+            <img
+                src="{{ article.cover_image.url }}"
+                alt="{{ article.title }}"
+                style="max-width: 400px;"
+            >
+        {% endif %}
+
+        <h2>
+            <a href="{% url 'article_detail' article.slug %}">
+                {{ article.title }}
+            </a>
+        </h2>
+
+        <p>
+            Автор:
+
+            {% if user.is_authenticated %}
+                <a href="{% url 'author_profile' article.author.username %}">
+                    {{ article.author.username }}
                 </a>
-            </p>
+            {% else %}
+                {{ article.author.username }}
+            {% endif %}
+        </p>
 
-        </article>
+        <p>
+            Опубликовано:
+            {{ article.published_at|date:"d.m.Y H:i" }}
+        </p>
 
-        <hr>
+        <p>
+            Лайков: {{ article.likes_count }}
+            ·
+            Комментариев: {{ article.comments_count }}
+        </p>
 
-    {% empty %}
-        <p>По вашему запросу статьи не найдены.</p>
-    {% endfor %}
+        <p>
+            {{ article.summary }}
+        </p>
 
-</body>
-</html>
+        <p>
+            <strong>Категории:</strong>
+
+            {% for category in article.categories.all %}
+                {{ category.name }}
+
+                {% if not forloop.last %}
+                    ,
+                {% endif %}
+
+            {% empty %}
+                Не указаны
+            {% endfor %}
+        </p>
+
+        <p>
+            <strong>Теги:</strong>
+
+            {% for tag in article.tags.all %}
+                {{ tag.name }}
+
+                {% if not forloop.last %}
+                    ,
+                {% endif %}
+
+            {% empty %}
+                Не указаны
+            {% endfor %}
+        </p>
+
+        <p>
+            <a href="{% url 'article_detail' article.slug %}">
+                Читать статью
+            </a>
+        </p>
+
+    </article>
+
+{% empty %}
+
+    <p>
+        По вашему запросу статьи не найдены.
+    </p>
+
+{% endfor %}
+
+{% endblock %}

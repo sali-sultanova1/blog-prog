@@ -1,72 +1,96 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Модерация статьи</title>
-</head>
-<body>
-    <h1>Модерация статьи</h1>
+{% extends "base.html" %}
 
-    <article>
-        <h2>{{ article.title }}</h2>
+{% block title %}Модерация статьи{% endblock %}
 
-        <p>Автор: {{ article.author.username }}</p>
+{% block content %}
 
-        <p>
-            <strong>Краткое содержание:</strong><br>
-            {{ article.summary }}
-        </p>
+<h1>Модерация статьи</h1>
 
-        <p>
-            <strong>Текст статьи:</strong><br>
-            {{ article.content }}
-        </p>
+<article>
 
-        {% if article.cover_image %}
-            <img
-                src="{{ article.cover_image.url }}"
-                alt="{{ article.title }}"
-                style="max-width: 500px;"
-            >
-        {% endif %}
-
-        <p>
-            <strong>Категории:</strong>
-            {% for category in article.categories.all %}
-                {{ category.name }}
-                {% if not forloop.last %}, {% endif %}
-            {% empty %}
-                Не указаны
-            {% endfor %}
-        </p>
-
-        <p>
-            <strong>Теги:</strong>
-            {% for tag in article.tags.all %}
-                {{ tag.name }}
-                {% if not forloop.last %}, {% endif %}
-            {% empty %}
-                Не указаны
-            {% endfor %}
-        </p>
-    </article>
-
-    <hr>
-
-    <h2>Решение</h2>
-
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-
-        <button type="submit">Сохранить решение</button>
-    </form>
+    <h2>
+        {{ article.title }}
+    </h2>
 
     <p>
-        <a href="{% url 'moderation_queue' %}">
-            Назад к очереди
-        </a>
+        Автор:
+        {{ article.author.username }}
     </p>
-</body>
-</html>
+
+    <p>
+        <strong>Краткое содержание:</strong>
+    </p>
+
+    <p>
+        {{ article.summary }}
+    </p>
+
+    <p>
+        <strong>Текст статьи:</strong>
+    </p>
+
+    <div>
+        {{ article.content|linebreaks }}
+    </div>
+
+    {% if article.cover_image %}
+        <img
+            src="{{ article.cover_image.url }}"
+            alt="{{ article.title }}"
+            style="max-width: 500px;"
+        >
+    {% endif %}
+
+    <p>
+        <strong>Категории:</strong>
+
+        {% for category in article.categories.all %}
+            {{ category.name }}
+
+            {% if not forloop.last %}
+                ,
+            {% endif %}
+
+        {% empty %}
+            Не указаны
+        {% endfor %}
+    </p>
+
+    <p>
+        <strong>Теги:</strong>
+
+        {% for tag in article.tags.all %}
+            {{ tag.name }}
+
+            {% if not forloop.last %}
+                ,
+            {% endif %}
+
+        {% empty %}
+            Не указаны
+        {% endfor %}
+    </p>
+
+</article>
+
+<hr>
+
+<h2>Решение</h2>
+
+<form method="post">
+    {% csrf_token %}
+
+    {{ form.as_p }}
+
+    <button type="submit">
+        Сохранить решение
+    </button>
+</form>
+
+<p>
+    <a href="{% url 'moderation_queue' %}">
+        Назад к очереди
+    </a>
+</p>
+
+{% endblock %}

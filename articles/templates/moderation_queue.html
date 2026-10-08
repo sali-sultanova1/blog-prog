@@ -1,34 +1,45 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Очередь модерации</title>
-</head>
-<body>
-    <h1>Очередь модерации</h1>
+{% extends "base.html" %}
 
-    {% for article in articles %}
-        <article>
-            <h2>{{ article.title }}</h2>
+{% block title %}Очередь модерации{% endblock %}
 
-            <p>Автор: {{ article.author.username }}</p>
+{% block content %}
 
-            <p>
-                Отправлена:
-                {{ article.submitted_at|date:"d.m.Y H:i" }}
-            </p>
+<h1>Очередь модерации</h1>
 
-            <p>{{ article.summary }}</p>
+{% for article in articles %}
 
-            <a href="{% url 'moderate_article' article.pk %}">
-                Проверить статью
-            </a>
-        </article>
+    <article>
 
-        <hr>
-    {% empty %}
-        <p>Статей на модерации нет.</p>
-    {% endfor %}
-</body>
-</html>
+        <h2>
+            {{ article.title }}
+        </h2>
+
+        <p>
+            Автор:
+            {{ article.author.username }}
+        </p>
+
+        <p>
+            Отправлена:
+            {{ article.submitted_at|date:"d.m.Y H:i" }}
+        </p>
+
+        <p>
+            {{ article.summary }}
+        </p>
+
+        <a href="{% url 'moderate_article' article.pk %}">
+            Проверить статью
+        </a>
+
+    </article>
+
+{% empty %}
+
+    <p>
+        Статей на модерации нет.
+    </p>
+
+{% endfor %}
+
+{% endblock %}

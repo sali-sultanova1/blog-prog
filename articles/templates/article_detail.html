@@ -1,201 +1,213 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ article.title }}</title>
-</head>
-<body>
+{% extends "base.html" %}
+
+{% block title %}
+{{ article.title }}
+{% endblock %}
+
+{% block content %}
+
+<p>
+    <a href="{% url 'article_list' %}">
+        Назад к статьям
+    </a>
+</p>
+
+<article>
+
+    <h1>
+        {{ article.title }}
+    </h1>
 
     <p>
-        <a href="{% url 'article_list' %}">
-            Назад к статьям
-        </a>
-    </p>
+        Автор:
 
-    <article>
-
-        <h1>{{ article.title }}</h1>
-
-        <p>
-            Автор:
-            {% if user.is_authenticated %}
-                <a href="{% url 'author_profile' article.author.username %}">
-                    {{ article.author.username }}
-                </a>
-            {% else %}
+        {% if user.is_authenticated %}
+            <a href="{% url 'author_profile' article.author.username %}">
                 {{ article.author.username }}
-            {% endif %}
-        </p>
-
-        <p>
-            Опубликовано:
-            {{ article.published_at|date:"d.m.Y H:i" }}
-        </p>
-
-        {% if article.cover_image %}
-            <img
-                src="{{ article.cover_image.url }}"
-                alt="{{ article.title }}"
-                style="max-width: 600px;"
-            >
+            </a>
+        {% else %}
+            {{ article.author.username }}
         {% endif %}
-
-        <p>
-            <strong>Категории:</strong>
-
-            {% for category in article.categories.all %}
-                {{ category.name }}
-                {% if not forloop.last %}, {% endif %}
-            {% empty %}
-                Не указаны
-            {% endfor %}
-        </p>
-
-        <p>
-            <strong>Теги:</strong>
-
-            {% for tag in article.tags.all %}
-                {{ tag.name }}
-                {% if not forloop.last %}, {% endif %}
-            {% empty %}
-                Не указаны
-            {% endfor %}
-        </p>
-
-        <hr>
-
-        <p>
-            {{ article.content|linebreaks }}
-        </p>
-
-    </article>
-
-    <hr>
-
-    <h2>Реакции</h2>
-
-    <p>
-        Лайков: {{ article.likes.count }}
     </p>
 
-    {% if user.is_authenticated %}
+    <p>
+        Опубликовано:
+        {{ article.published_at|date:"d.m.Y H:i" }}
+    </p>
 
-        <form
-            method="post"
-            action="{% url 'toggle_like' article.slug %}"
+    {% if article.cover_image %}
+        <img
+            src="{{ article.cover_image.url }}"
+            alt="{{ article.title }}"
+            style="max-width: 600px;"
         >
-            {% csrf_token %}
-
-            {% if is_liked %}
-                <button type="submit">
-                    Убрать лайк
-                </button>
-            {% else %}
-                <button type="submit">
-                    Поставить лайк
-                </button>
-            {% endif %}
-        </form>
-
-        <form
-            method="post"
-            action="{% url 'toggle_bookmark' article.slug %}"
-        >
-            {% csrf_token %}
-
-            {% if is_bookmarked %}
-                <button type="submit">
-                    Убрать из закладок
-                </button>
-            {% else %}
-                <button type="submit">
-                    Сохранить в закладки
-                </button>
-            {% endif %}
-        </form>
-
-    {% else %}
-
-        <p>
-            <a href="{% url 'login' %}">
-                Войдите
-            </a>,
-            чтобы ставить лайки, сохранять статьи и комментировать.
-        </p>
-
     {% endif %}
+
+    <p>
+        <strong>Категории:</strong>
+
+        {% for category in article.categories.all %}
+            {{ category.name }}
+
+            {% if not forloop.last %}
+                ,
+            {% endif %}
+
+        {% empty %}
+            Не указаны
+        {% endfor %}
+    </p>
+
+    <p>
+        <strong>Теги:</strong>
+
+        {% for tag in article.tags.all %}
+            {{ tag.name }}
+
+            {% if not forloop.last %}
+                ,
+            {% endif %}
+
+        {% empty %}
+            Не указаны
+        {% endfor %}
+    </p>
 
     <hr>
 
-    <h2>Комментарии</h2>
+    <div>
+        {{ article.content|linebreaks }}
+    </div>
 
-    {% if user.is_authenticated %}
+</article>
 
-        <form
-            method="post"
-            action="{% url 'add_comment' article.slug %}"
-        >
-            {% csrf_token %}
+<hr>
 
-            {{ comment_form.as_p }}
+<h2>Реакции</h2>
 
+<p>
+    Лайков: {{ article.likes.count }}
+</p>
+
+{% if user.is_authenticated %}
+
+    <form
+        method="post"
+        action="{% url 'toggle_like' article.slug %}"
+    >
+        {% csrf_token %}
+
+        {% if is_liked %}
             <button type="submit">
-                Оставить комментарий
+                Убрать лайк
             </button>
-        </form>
+        {% else %}
+            <button type="submit">
+                Поставить лайк
+            </button>
+        {% endif %}
+    </form>
 
-        <hr>
+    <form
+        method="post"
+        action="{% url 'toggle_bookmark' article.slug %}"
+    >
+        {% csrf_token %}
 
-    {% endif %}
+        {% if is_bookmarked %}
+            <button type="submit">
+                Убрать из закладок
+            </button>
+        {% else %}
+            <button type="submit">
+                Сохранить в закладки
+            </button>
+        {% endif %}
+    </form>
 
-    {% for comment in comments %}
+{% else %}
+
+    <p>
+        <a href="{% url 'login' %}">
+            Войдите
+        </a>,
+        чтобы ставить лайки, сохранять статьи и комментировать.
+    </p>
+
+{% endif %}
+
+<hr>
+
+<h2>Комментарии</h2>
+
+{% if user.is_authenticated %}
+
+    <form
+        method="post"
+        action="{% url 'add_comment' article.slug %}"
+    >
+        {% csrf_token %}
+
+        {{ comment_form.as_p }}
+
+        <button type="submit">
+            Оставить комментарий
+        </button>
+    </form>
+
+    <hr>
+
+{% endif %}
+
+{% for comment in comments %}
+
+    <div>
+
+        <p>
+            <strong>
+                {{ comment.user.username }}
+            </strong>
+        </p>
 
         <div>
-
-            <p>
-                <strong>{{ comment.user.username }}</strong>
-            </p>
-
-            <p>
-                {{ comment.content|linebreaks }}
-            </p>
-
-            <p>
-                {{ comment.created_at|date:"d.m.Y H:i" }}
-            </p>
-
-
-            {% if user.is_authenticated and comment.user == user %}
-
-                <p>
-                    <a href="{% url 'edit_comment' comment.pk %}">
-                        Редактировать
-                    </a>
-                </p>
-
-                <form
-                    method="post"
-                    action="{% url 'delete_comment' comment.pk %}"
-                >
-                    {% csrf_token %}
-
-                    <button type="submit">
-                        Удалить комментарий
-                    </button>
-                </form>
-
-            {% endif %}
-
+            {{ comment.content|linebreaks }}
         </div>
 
-        <hr>
+        <p>
+            {{ comment.created_at|date:"d.m.Y H:i" }}
+        </p>
 
-    {% empty %}
+        {% if user.is_authenticated and comment.user == user %}
 
-        <p>Комментариев пока нет.</p>
+            <p>
+                <a href="{% url 'edit_comment' comment.pk %}">
+                    Редактировать
+                </a>
+            </p>
 
-    {% endfor %}
+            <form
+                method="post"
+                action="{% url 'delete_comment' comment.pk %}"
+            >
+                {% csrf_token %}
 
-</body>
-</html>
+                <button type="submit">
+                    Удалить комментарий
+                </button>
+            </form>
+
+        {% endif %}
+
+    </div>
+
+    <hr>
+
+{% empty %}
+
+    <p>
+        Комментариев пока нет.
+    </p>
+
+{% endfor %}
+
+{% endblock %}

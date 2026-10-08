@@ -1,55 +1,63 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мои закладки</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-    <h1>Мои закладки</h1>
+{% block title %}Мои закладки{% endblock %}
 
-    {% for bookmark in bookmarks %}
-        <article>
-            <h2>
-                <a href="{% url 'article_detail' bookmark.article.slug %}">
-                    {{ bookmark.article.title }}
-                </a>
-            </h2>
+{% block content %}
 
-            <p>
-                Автор: {{ bookmark.article.author.username }}
-            </p>
+<h1>Мои закладки</h1>
 
-            <p>
-                Добавлено в закладки:
-                {{ bookmark.created_at|date:"d.m.Y H:i" }}
-            </p>
+{% for bookmark in bookmarks %}
 
-            <p>
-                {{ bookmark.article.summary }}
-            </p>
+    <article>
 
+        <h2>
+            <a href="{% url 'article_detail' bookmark.article.slug %}">
+                {{ bookmark.article.title }}
+            </a>
+        </h2>
+
+        <p>
+            Автор:
+
+            <a href="{% url 'author_profile' bookmark.article.author.username %}">
+                {{ bookmark.article.author.username }}
+            </a>
+        </p>
+
+        <p>
+            Добавлено в закладки:
+            {{ bookmark.created_at|date:"d.m.Y H:i" }}
+        </p>
+
+        <p>
+            {{ bookmark.article.summary }}
+        </p>
+
+        <p>
             <a href="{% url 'article_detail' bookmark.article.slug %}">
                 Читать статью
             </a>
+        </p>
 
-            <form
-                method="post"
-                action="{% url 'toggle_bookmark' bookmark.article.slug %}"
-            >
-                {% csrf_token %}
-                <button type="submit">
-                    Убрать из закладок
-                </button>
-            </form>
-        </article>
+        <form
+            method="post"
+            action="{% url 'toggle_bookmark' bookmark.article.slug %}"
+        >
+            {% csrf_token %}
 
-        <hr>
+            <button type="submit">
+                Убрать из закладок
+            </button>
+        </form>
 
-    {% empty %}
-        <p>У вас пока нет сохранённых статей.</p>
-    {% endfor %}
+    </article>
 
-</body>
-</html>
+{% empty %}
+
+    <p>
+        У вас пока нет сохранённых статей.
+    </p>
+
+{% endfor %}
+
+{% endblock %}

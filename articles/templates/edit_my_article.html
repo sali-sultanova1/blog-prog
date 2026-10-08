@@ -1,24 +1,30 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Редактирование статьи</title>
-</head>
-<body>
-    <h1>Редактировать статью</h1>
+{% extends "base.html" %}
 
-    <p>Статья: {{ article.title }}</p>
+{% block title %}Редактирование статьи{% endblock %}
 
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
+{% block content %}
 
-        <button type="submit">Сохранить изменения</button>
-    </form>
+<h1>Редактировать статью</h1>
 
+<p>
+    Статья:
+    <strong>{{ article.title }}</strong>
+</p>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    {{ form.as_p }}
+
+    <button type="submit">
+        Сохранить изменения
+    </button>
+</form>
+
+<p>
     <a href="{% url 'my_articles' %}">
         Назад к моим статьям
     </a>
-</body>
-</html>
+</p>
+
+{% endblock %}

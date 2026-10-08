@@ -1,60 +1,91 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мои статьи</title>
-</head>
-<body>
-    <h1>Мои статьи</h1>
+{% extends "base.html" %}
 
-    <a href="{% url 'create_article' %}">Создать статью</a>
+{% block title %}Мои статьи{% endblock %}
 
-    <hr>
+{% block content %}
 
-    {% for article in articles %}
-        <article>
-            <h2>{{ article.title }}</h2>
+<h1>Мои статьи</h1>
+
+<p>
+    <a href="{% url 'create_article' %}">
+        Создать статью
+    </a>
+</p>
+
+<hr>
+
+{% for article in articles %}
+
+    <article>
+
+        <h2>
+            {{ article.title }}
+        </h2>
+
+        <p>
+            <strong>Статус:</strong>
+            {{ article.get_status_display }}
+        </p>
+
+        <p>
+            Создано:
+            {{ article.created_at|date:"d.m.Y H:i" }}
+        </p>
+
+        {% if article.summary %}
+            <p>
+                {{ article.summary }}
+            </p>
+        {% endif %}
+
+        {% if article.status == "published" %}
+            <p>
+                <a href="{% url 'article_detail' article.slug %}">
+                    Посмотреть опубликованную статью
+                </a>
+            </p>
+        {% endif %}
+
+        {% if article.status == "draft" or article.status == "rejected" %}
 
             <p>
-                Статус:
-                {{ article.get_status_display }}
+                <a href="{% url 'edit_article' article.pk %}">
+                    Редактировать
+                </a>
             </p>
 
-            <p>
-                Создано:
-                {{ article.created_at|date:"d.m.Y H:i" }}
-            </p>
-
-            {% if article.summary %}
-                <p>{{ article.summary }}</p>
-            {% endif %}
-
-            {% if article.status == "draft" or article.status == "rejected" %}
-                <p>
-                    <a href="{% url 'edit_article' article.pk %}">
-                        Редактировать
-                    </a>
-                </p>
-
-                <form method="post" action="{% url 'submit_article' article.pk %}">
-                    {% csrf_token %}
-                    <button type="submit">Отправить на модерацию</button>
-                </form>
-            {% endif %}
-
-            <form method="post" action="{% url 'delete_article' article.pk %}">
+            <form
+                method="post"
+                action="{% url 'submit_article' article.pk %}"
+            >
                 {% csrf_token %}
+
                 <button type="submit">
-                    Удалить статью
+                    Отправить на модерацию
                 </button>
             </form>
 
-        </article>
+        {% endif %}
 
-        <hr>
-    {% empty %}
-        <p>У вас пока нет статей.</p>
-    {% endfor %}
-</body>
-</html>
+        <form
+            method="post"
+            action="{% url 'delete_article' article.pk %}"
+        >
+            {% csrf_token %}
+
+            <button type="submit">
+                Удалить статью
+            </button>
+        </form>
+
+    </article>
+
+{% empty %}
+
+    <p>
+        У вас пока нет статей.
+    </p>
+
+{% endfor %}
+
+{% endblock %}

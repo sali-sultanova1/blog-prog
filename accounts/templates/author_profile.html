@@ -1,95 +1,115 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ author_profile.user.username }}</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-    <h1>Профиль автора</h1>
+{% block title %}
+{{ author_profile.user.username }}
+{% endblock %}
 
-    {% if author_profile.user.avatar %}
-        <img
-            src="{{ author_profile.user.avatar.url }}"
-            alt="{{ author_profile.user.username }}"
-            style="max-width: 200px;"
-        >
-    {% endif %}
+{% block content %}
 
-    <h2>{{ author_profile.user.username }}</h2>
+<h1>Профиль автора</h1>
 
-    {% if author_profile.user.first_name or author_profile.user.last_name %}
-        <p>
-            {{ author_profile.user.first_name }}
-            {{ author_profile.user.last_name }}
-        </p>
-    {% endif %}
+{% if author_profile.user.avatar %}
+    <img
+        src="{{ author_profile.user.avatar.url }}"
+        alt="{{ author_profile.user.username }}"
+        style="max-width: 200px;"
+    >
+{% endif %}
 
-    {% if author_profile.specialization %}
-        <p>
-            <strong>Специализация:</strong>
-            {{ author_profile.specialization }}
-        </p>
-    {% endif %}
+<h2>
+    {{ author_profile.user.username }}
+</h2>
 
-    {% if author_profile.user.bio %}
-        <p>
-            <strong>О себе:</strong>
-            {{ author_profile.user.bio }}
-        </p>
-    {% endif %}
-
-    {% if author_profile.portfolio_url %}
-        <p>
-            <a href="{{ author_profile.portfolio_url }}" target="_blank" rel="noopener">
-                Портфолио автора
-            </a>
-        </p>
-    {% endif %}
-
-    <h2>Статистика</h2>
-
-    <p>Опубликовано статей: {{ articles_count }}</p>
-    <p>Всего лайков: {{ stats.total_likes }}</p>
-    <p>Всего комментариев: {{ stats.total_comments }}</p>
-
-    <hr>
-
-    <h2>Опубликованные статьи</h2>
-
-    {% for article in articles %}
-        <article>
-            <h3>
-                <a href="{% url 'article_detail' article.slug %}">
-                    {{ article.title }}
-                </a>
-            </h3>
-
-            <p>
-                {{ article.published_at|date:"d.m.Y H:i" }}
-            </p>
-
-            <p>
-                {{ article.summary }}
-            </p>
-
-            <a href="{% url 'article_detail' article.slug %}">
-                Читать статью
-            </a>
-        </article>
-
-        <hr>
-
-    {% empty %}
-        <p>У этого автора пока нет опубликованных статей.</p>
-    {% endfor %}
-
+{% if author_profile.user.first_name or author_profile.user.last_name %}
     <p>
-        <a href="{% url 'article_list' %}">
-            Назад к статьям
+        {{ author_profile.user.first_name }}
+        {{ author_profile.user.last_name }}
+    </p>
+{% endif %}
+
+{% if author_profile.specialization %}
+    <p>
+        <strong>Специализация:</strong>
+        {{ author_profile.specialization }}
+    </p>
+{% endif %}
+
+{% if author_profile.user.bio %}
+    <p>
+        <strong>О себе:</strong>
+        {{ author_profile.user.bio }}
+    </p>
+{% endif %}
+
+{% if author_profile.portfolio_url %}
+    <p>
+        <a
+            href="{{ author_profile.portfolio_url }}"
+            target="_blank"
+            rel="noopener"
+        >
+            Портфолио автора
         </a>
     </p>
+{% endif %}
 
-</body>
-</html>
+<h2>Статистика</h2>
+
+<p>
+    Опубликовано статей:
+    {{ articles_count }}
+</p>
+
+<p>
+    Всего лайков:
+    {{ stats.total_likes }}
+</p>
+
+<p>
+    Всего комментариев:
+    {{ stats.total_comments }}
+</p>
+
+<hr>
+
+<h2>Опубликованные статьи</h2>
+
+{% for article in articles %}
+
+    <article>
+
+        <h3>
+            <a href="{% url 'article_detail' article.slug %}">
+                {{ article.title }}
+            </a>
+        </h3>
+
+        <p>
+            {{ article.published_at|date:"d.m.Y H:i" }}
+        </p>
+
+        <p>
+            {{ article.summary }}
+        </p>
+
+        <a href="{% url 'article_detail' article.slug %}">
+            Читать статью
+        </a>
+
+    </article>
+
+{% empty %}
+
+    <p>
+        У этого автора пока нет опубликованных статей.
+    </p>
+
+{% endfor %}
+
+<p>
+    <a href="{% url 'article_list' %}">
+        Назад к статьям
+    </a>
+</p>
+
+{% endblock %}
