@@ -13,6 +13,10 @@ from .api_permissions import ArticleAPIPermission
 class ArticleViewSet(viewsets.ModelViewSet):
     serializer_class = ArticleSerializer
     permission_classes = [ArticleAPIPermission]
+    filterset_fields = ["categories", "tags"]
+    search_fields = ["title", "summary", "content", "author__username"]
+    ordering_fields = ["published_at", "created_at", "title"]
+    ordering = ["-published_at"]
 
     def get_queryset(self):
         queryset = Article.objects.select_related("author").prefetch_related("categories", "tags")

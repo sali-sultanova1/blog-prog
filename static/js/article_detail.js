@@ -103,9 +103,12 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             const comment = await response.json();
+            const noCommentsMessage = document.getElementById("no-comments-message");
+            if (noCommentsMessage) {
+                noCommentsMessage.remove();
+            }
 
             const element = createCommentElement(comment);
-
             commentsContainer.prepend(element);
 
             textarea.value = "";

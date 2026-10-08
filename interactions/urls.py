@@ -1,5 +1,6 @@
 from django.urls import path
-from .views import add_comment_view, edit_comment_view, delete_comment_view, toggle_like_view, toggle_bookmark_view, my_bookmarks_view
+from .views import my_bookmarks_view
+# from .views import add_comment_view, edit_comment_view, delete_comment_view, toggle_like_view, toggle_bookmark_view
 
 urlpatterns = [
     # path("articles/<slug:slug>/comment/", add_comment_view, name="add_comment"),

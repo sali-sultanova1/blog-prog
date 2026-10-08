@@ -5,3 +5,4 @@ django-environ
 redis
 django-debug-toolbar
 djangorestframework
+django-filter
