@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}
 {{ article.title }}
@@ -12,11 +13,13 @@
     </a>
 </p>
 
+
 <article>
 
     <h1>
         {{ article.title }}
     </h1>
+
 
     <p>
         Автор:
@@ -30,10 +33,12 @@
         {% endif %}
     </p>
 
+
     <p>
         Опубликовано:
         {{ article.published_at|date:"d.m.Y H:i" }}
     </p>
+
 
     {% if article.cover_image %}
         <img
@@ -43,10 +48,12 @@
         >
     {% endif %}
 
+
     <p>
         <strong>Категории:</strong>
 
         {% for category in article.categories.all %}
+
             {{ category.name }}
 
             {% if not forloop.last %}
@@ -54,14 +61,18 @@
             {% endif %}
 
         {% empty %}
+
             Не указаны
+
         {% endfor %}
     </p>
+
 
     <p>
         <strong>Теги:</strong>
 
         {% for tag in article.tags.all %}
+
             {{ tag.name }}
 
             {% if not forloop.last %}
@@ -69,11 +80,15 @@
             {% endif %}
 
         {% empty %}
+
             Не указаны
+
         {% endfor %}
     </p>
 
+
     <hr>
+
 
     <div>
         {{ article.content|linebreaks }}
@@ -81,49 +96,47 @@
 
 </article>
 
+
 <hr>
+
 
 <h2>Реакции</h2>
 
+
 <p>
-    Лайков: {{ article.likes.count }}
+    Лайков:
+    <span id="likes-count">
+        {{ article.likes.count }}
+    </span>
 </p>
+
 
 {% if user.is_authenticated %}
 
-    <form
-        method="post"
-        action="{% url 'toggle_like' article.slug %}"
+    <button
+        type="button"
+        id="like-button"
+        data-url="{% url 'api-article-like' article.pk %}"
     >
-        {% csrf_token %}
-
         {% if is_liked %}
-            <button type="submit">
-                Убрать лайк
-            </button>
+            Убрать лайк
         {% else %}
-            <button type="submit">
-                Поставить лайк
-            </button>
+            Поставить лайк
         {% endif %}
-    </form>
+    </button>
 
-    <form
-        method="post"
-        action="{% url 'toggle_bookmark' article.slug %}"
+
+    <button
+        type="button"
+        id="bookmark-button"
+        data-url="{% url 'api-article-bookmark' article.pk %}"
     >
-        {% csrf_token %}
-
         {% if is_bookmarked %}
-            <button type="submit">
-                Убрать из закладок
-            </button>
+            Убрать из закладок
         {% else %}
-            <button type="submit">
-                Сохранить в закладки
-            </button>
+            Сохранить в закладки
         {% endif %}
-    </form>
+    </button>
 
 {% else %}
 
@@ -136,78 +149,138 @@
 
 {% endif %}
 
+
 <hr>
 
+
 <h2>Комментарии</h2>
+
 
 {% if user.is_authenticated %}
 
     <form
-        method="post"
-        action="{% url 'add_comment' article.slug %}"
+        id="comment-form"
+        data-url="{% url 'api-comment-list' %}"
+        data-article-id="{{ article.pk }}"
     >
         {% csrf_token %}
 
-        {{ comment_form.as_p }}
+        <p>
+            <label for="comment-content">
+                Комментарий
+            </label>
+        </p>
+
+        <textarea
+            id="comment-content"
+            name="content"
+            rows="5"
+            required
+        ></textarea>
+
+        <br>
 
         <button type="submit">
             Оставить комментарий
         </button>
     </form>
 
+
     <hr>
 
 {% endif %}
 
-{% for comment in comments %}
 
-    <div>
+<div
+    id="comments"
+    data-base-url="{% url 'api-comment-list' %}"
+>
 
-        <p>
-            <strong>
-                {{ comment.user.username }}
-            </strong>
-        </p>
+    {% for comment in comments %}
 
-        <div>
-            {{ comment.content|linebreaks }}
-        </div>
-
-        <p>
-            {{ comment.created_at|date:"d.m.Y H:i" }}
-        </p>
-
-        {% if user.is_authenticated and comment.user == user %}
+        <div
+            class="comment"
+            data-comment-id="{{ comment.pk }}"
+            data-url="{% url 'api-comment-detail' comment.pk %}"
+        >
 
             <p>
-                <a href="{% url 'edit_comment' comment.pk %}">
-                    Редактировать
-                </a>
+                <strong class="comment-username">
+                    {{ comment.user.username }}
+                </strong>
             </p>
 
-            <form
-                method="post"
-                action="{% url 'delete_comment' comment.pk %}"
-            >
-                {% csrf_token %}
 
-                <button type="submit">
-                    Удалить комментарий
+            <div class="comment-content">
+                {{ comment.content|linebreaks }}
+            </div>
+
+
+            <p>
+                {{ comment.created_at|date:"d.m.Y H:i" }}
+            </p>
+
+
+            {% if user.is_authenticated and comment.user == user %}
+
+                <button
+                    type="button"
+                    class="edit-comment-button"
+                >
+                    Редактировать
                 </button>
-            </form>
 
-        {% endif %}
 
-    </div>
+                <button
+                    type="button"
+                    class="delete-comment-button"
+                >
+                    Удалить
+                </button>
 
-    <hr>
 
-{% empty %}
+                <div
+                    class="comment-edit"
+                    hidden
+                >
 
-    <p>
-        Комментариев пока нет.
-    </p>
+                    <textarea rows="4">{{ comment.content }}</textarea>
 
-{% endfor %}
+
+                    <button
+                        type="button"
+                        class="save-comment-button"
+                    >
+                        Сохранить
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="cancel-comment-button"
+                    >
+                        Отмена
+                    </button>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+        <hr>
+
+    {% empty %}
+
+        <p id="no-comments-message">
+            Комментариев пока нет.
+        </p>
+
+    {% endfor %}
+
+</div>
+
+
+<script src="{% static 'js/article_detail.js' %}"></script>
 
 {% endblock %}

@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'articles.apps.ArticlesConfig',
     'interactions',
     'debug_toolbar',
+    'rest_framework',
 
 ]
 
