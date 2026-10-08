@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}
 Статьи
@@ -8,7 +9,7 @@
 
 <h1>Статьи</h1>
 
-<form method="get">
+<form method="get" id="article-filter-form">
 
     <div>
         <label for="q">Поиск</label>
@@ -19,6 +20,7 @@
             name="q"
             value="{{ query }}"
             placeholder="Поиск по статьям"
+            autocomplete="off"
         >
     </div>
 
@@ -60,7 +62,7 @@
         Найти
     </button>
 
-    <a href="{% url 'article_list' %}">
+    <a href="{% url 'article_list' %}" id="reset-filters">
         Сбросить фильтры
     </a>
 
@@ -68,95 +70,113 @@
 
 <hr>
 
-{% for article in articles %}
+<p id="search-status"></p>
 
-    <article>
+<div
+    id="article-results"
+    data-api-url="{% url 'api-article-list' %}"
+    data-article-url="{% url 'article_detail' '__slug__' %}"
+    data-author-url="{% url 'author_profile' '__username__' %}"
+    data-authenticated="{{ user.is_authenticated|yesno:'true,false' }}"
+>
 
-        {% if article.cover_image %}
-            <img
-                src="{{ article.cover_image.url }}"
-                alt="{{ article.title }}"
-                style="max-width: 400px;"
-            >
-        {% endif %}
+    {% for article in articles %}
 
-        <h2>
-            <a href="{% url 'article_detail' article.slug %}">
-                {{ article.title }}
-            </a>
-        </h2>
+        <article>
 
-        <p>
-            Автор:
-
-            {% if user.is_authenticated %}
-                <a href="{% url 'author_profile' article.author.username %}">
-                    {{ article.author.username }}
-                </a>
-            {% else %}
-                {{ article.author.username }}
+            {% if article.cover_image %}
+                <img
+                    src="{{ article.cover_image.url }}"
+                    alt="{{ article.title }}"
+                    style="max-width: 400px;"
+                >
             {% endif %}
-        </p>
 
-        <p>
-            Опубликовано:
-            {{ article.published_at|date:"d.m.Y H:i" }}
-        </p>
+            <h2>
+                <a href="{% url 'article_detail' article.slug %}">
+                    {{ article.title }}
+                </a>
+            </h2>
 
-        <p>
-            Лайков: {{ article.likes_count }}
-            ·
-            Комментариев: {{ article.comments_count }}
-        </p>
+            <p>
+                Автор:
 
-        <p>
-            {{ article.summary }}
-        </p>
-
-        <p>
-            <strong>Категории:</strong>
-
-            {% for category in article.categories.all %}
-                {{ category.name }}
-
-                {% if not forloop.last %}
-                    ,
+                {% if user.is_authenticated %}
+                    <a href="{% url 'author_profile' article.author.username %}">
+                        {{ article.author.username }}
+                    </a>
+                {% else %}
+                    {{ article.author.username }}
                 {% endif %}
+            </p>
 
-            {% empty %}
-                Не указаны
-            {% endfor %}
-        </p>
+            <p>
+                Опубликовано:
+                {{ article.published_at|date:"d.m.Y H:i" }}
+            </p>
+
+            <p>
+                Лайков: {{ article.likes_count }}
+                ·
+                Комментариев: {{ article.comments_count }}
+            </p>
+
+            <p>
+                {{ article.summary }}
+            </p>
+
+            <p>
+                <strong>Категории:</strong>
+
+                {% for category in article.categories.all %}
+                    {{ category.name }}{% if not forloop.last %}, {% endif %}
+                {% empty %}
+                    Не указаны
+                {% endfor %}
+            </p>
+
+            <p>
+                <strong>Теги:</strong>
+
+                {% for tag in article.tags.all %}
+                    {{ tag.name }}{% if not forloop.last %}, {% endif %}
+                {% empty %}
+                    Не указаны
+                {% endfor %}
+            </p>
+
+            <p>
+                <a href="{% url 'article_detail' article.slug %}">
+                    Читать статью
+                </a>
+            </p>
+
+        </article>
+
+    {% empty %}
 
         <p>
-            <strong>Теги:</strong>
-
-            {% for tag in article.tags.all %}
-                {{ tag.name }}
-
-                {% if not forloop.last %}
-                    ,
-                {% endif %}
-
-            {% empty %}
-                Не указаны
-            {% endfor %}
+            По вашему запросу статьи не найдены.
         </p>
 
-        <p>
-            <a href="{% url 'article_detail' article.slug %}">
-                Читать статью
-            </a>
-        </p>
+    {% endfor %}
 
-    </article>
+</div>
 
-{% empty %}
 
-    <p>
-        По вашему запросу статьи не найдены.
-    </p>
+<div id="api-pagination" hidden>
+    <button type="button" id="previous-page">
+        Назад
+    </button>
 
-{% endfor %}
+    <span id="page-number"></span>
+
+    <button type="button" id="next-page">
+        Далее
+    </button>
+</div>
+
+
+<script src="{% static 'js/article_list.js' %}"></script>
 
 {% endblock %}

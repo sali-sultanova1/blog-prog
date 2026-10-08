@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Q, Count
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -8,18 +8,19 @@ from interactions.models import Like, Bookmark
 from .models import Article
 from .serializers import ArticleSerializer
 from .api_permissions import ArticleAPIPermission
+from .filters import ArticleFilter
 
 
 class ArticleViewSet(viewsets.ModelViewSet):
     serializer_class = ArticleSerializer
     permission_classes = [ArticleAPIPermission]
-    filterset_fields = ["categories", "tags"]
+    filterset_class = ArticleFilter
     search_fields = ["title", "summary", "content", "author__username"]
     ordering_fields = ["published_at", "created_at", "title"]
     ordering = ["-published_at"]
 
     def get_queryset(self):
-        queryset = Article.objects.select_related("author").prefetch_related("categories", "tags")
+        queryset = Article.objects.select_related("author").prefetch_related("categories", "tags").annotate(likes_count=Count("likes", distinct=True), comments_count=Count("comments", distinct=True))
 
         if self.action in ("list", "like", "bookmark"):
             return queryset.filter(status=Article.Status.PUBLISHED)
@@ -27,7 +28,6 @@ class ArticleViewSet(viewsets.ModelViewSet):
         if self.action == "retrieve":
             if self.request.user.is_authenticated:
                 return queryset.filter(Q(status=Article.Status.PUBLISHED) | Q(author=self.request.user))
-
             return queryset.filter(status=Article.Status.PUBLISHED)
 
         if self.request.user.is_authenticated:
