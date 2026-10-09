@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'drf_spectacular',
+    'storages',
 
 ]
 
@@ -147,15 +148,38 @@ STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
+YANDEX_STORAGE_BUCKET = env("YANDEX_STORAGE_BUCKET", default="")
 
+if YANDEX_STORAGE_BUCKET:
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "access_key": env("YANDEX_STORAGE_ACCESS_KEY_ID"),
+                "secret_key": env("YANDEX_STORAGE_SECRET_ACCESS_KEY"),
+                "bucket_name": YANDEX_STORAGE_BUCKET,
+                "endpoint_url": "https://storage.yandexcloud.net",
+                "region_name": "ru-central1",
+                "addressing_style": "virtual",
+                "signature_version": "s3v4",
+                "querystring_auth": True,
+                "file_overwrite": False,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+else:
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+    
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 

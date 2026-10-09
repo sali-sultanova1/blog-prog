@@ -5,17 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="light">
-    <title>{% block title %}News Platform{% endblock %}</title>
+    <title>{% block title %}News Blog{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}?v=2">
 </head>
 <body>
 
 <header class="site-header">
     <div class="site-header__inner">
-        <a class="brand" href="{% url 'article_list' %}" aria-label="News Platform">
+        <a class="brand" href="{% url 'article_list' %}" aria-label="News Blog">
             <span class="brand__mark">N</span>
             <span class="brand__text">
-                <strong>News Platform</strong>
+                <strong>News Blog</strong>
                 <small>Independent stories</small>
             </span>
         </a>
@@ -90,7 +90,7 @@
 <footer class="site-footer">
     <div class="site-footer__inner">
         <div>
-            <strong>News Platform</strong>
+            <strong>News Blog</strong>
             <span>Новости, мнения и авторские истории.</span>
         </div>
         <span>Built with Django</span>
