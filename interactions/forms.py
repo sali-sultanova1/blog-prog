@@ -1,10 +1,10 @@
-# from .models import Comment
-# from django import forms
+from .models import Comment
+from django import forms
 
-# class CommentForm(forms.ModelForm):
-#     class Meta:
-#         model = Comment
-#         fields = ['content']
-#         widgets = {
-#             'content': forms.Textarea(attrs={'placeholder': 'Напишите комментарий…', 'rows': 5}),
-#         }
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['content']
+        widgets = {
+            'content': forms.Textarea(attrs={'placeholder': 'Напишите комментарий…', 'rows': 5}),
+        }
