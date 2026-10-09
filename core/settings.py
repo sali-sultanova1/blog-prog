@@ -30,8 +30,10 @@ RUNNING_TESTS = "test" in sys.argv
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
-
+ALLOWED_HOSTS = env.list(
+    "DJANGO_ALLOWED_HOSTS",
+    default=["localhost", "127.0.0.1"],
+)
 
 # Application definition
 
@@ -147,11 +149,7 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
-MAILERS = {
-    'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
-    },
-}
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 AUTH_USER_MODEL = "accounts.CustomUser"
 
@@ -165,10 +163,9 @@ LOGIN_URL = "login"
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://redis:6379/1",
+        "LOCATION": env("REDIS_URL", default="redis://redis:6379/1"),
     }
 }
-
 
 LOGGING = {
     "version": 1,

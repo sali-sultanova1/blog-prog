@@ -14,12 +14,12 @@ class ArticleSerializer(serializers.ModelSerializer):
         fields = ["id", "author", "categories", "category_names", "tags", "tag_names", "title", "slug", "summary", "content", "cover_image", "status", "likes_count", "comments_count", "created_at", "updated_at", "submitted_at", "published_at"]
         read_only_fields = ["id", "author", "status", "created_at", "updated_at", "submitted_at", "published_at"]
 
-    def get_likes_count(self, obj):
+    def get_likes_count(self, obj: Article) -> int:
         if hasattr(obj, "likes_count"):
             return obj.likes_count
         return obj.likes.count()
 
-    def get_comments_count(self, obj):
+    def get_comments_count(self, obj: Article) -> int:
         if hasattr(obj, "comments_count"):
             return obj.comments_count
         return obj.comments.count()
