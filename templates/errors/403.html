@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}
+Ошибка 403
+{% endblock %}
+
+{% block content %}
+
+<h1>403 — Доступ запрещён</h1>
+
+<p>
+    У вас нет прав для выполнения этого действия.
+</p>
+
+<p>
+    <a href="{% url 'article_list' %}">
+        Вернуться к статьям
+    </a>
+</p>
+
+{% endblock %}

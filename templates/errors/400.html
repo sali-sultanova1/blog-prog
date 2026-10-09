@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}
+Ошибка 400
+{% endblock %}
+
+{% block content %}
+
+<h1>400 — Некорректный запрос</h1>
+
+<p>
+    Сервер не смог обработать этот запрос.
+</p>
+
+<p>
+    <a href="{% url 'article_list' %}">
+        Вернуться к статьям
+    </a>
+</p>
+
+{% endblock %}
