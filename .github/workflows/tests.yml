@@ -25,4 +25,4 @@ jobs:
         run: sleep 5
 
       - name: Run tests
-        run: docker compose run --rm web python manage.py test -v 2
+        run: docker compose run --rm web sh -c "python manage.py collectstatic --noinput && python manage.py test -v 2"

@@ -155,6 +155,7 @@ def article_list_view(request):
             Q(title__icontains=query)
             | Q(summary__icontains=query)
             | Q(content__icontains=query)
+            | Q(tags__name__icontains=query)
         )
     
     if category_slug:

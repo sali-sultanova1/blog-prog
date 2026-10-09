@@ -29,7 +29,7 @@ class ArticleViewSet(viewsets.ModelViewSet):
     serializer_class = ArticleSerializer
     permission_classes = [ArticleAPIPermission]
     filterset_class = ArticleFilter
-    search_fields = ["title", "summary", "content", "author__username"]
+    search_fields = ["title", "summary", "content", "author__username", "tags__name"]
     ordering_fields = ["published_at", "created_at", "title"]
     ordering = ["-published_at"]
 

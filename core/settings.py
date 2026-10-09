@@ -229,7 +229,7 @@ REST_FRAMEWORK = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "News Platform API",
+    "TITLE": "News Blog API",
     "DESCRIPTION": "REST API for articles, comments, likes and bookmarks.",
     "VERSION": "1.0.0",
 }
