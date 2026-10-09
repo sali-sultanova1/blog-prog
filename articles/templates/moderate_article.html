@@ -4,93 +4,81 @@
 
 {% block content %}
 
-<h1>Модерация статьи</h1>
+<div class="article-shell">
 
-<article>
+    <a class="article-back" href="{% url 'moderation_queue' %}">
+        ← К очереди
+    </a>
 
-    <h2>
-        {{ article.title }}
-    </h2>
+    <header class="article-header">
 
-    <p>
-        Автор:
-        {{ article.author.username }}
-    </p>
+        <p class="eyebrow">Moderation review</p>
 
-    <p>
-        <strong>Краткое содержание:</strong>
-    </p>
+        <h1 class="article-title">
+            {{ article.title }}
+        </h1>
 
-    <p>
-        {{ article.summary }}
-    </p>
+        <p class="article-deck">
+            {{ article.summary }}
+        </p>
 
-    <p>
-        <strong>Текст статьи:</strong>
-    </p>
+        <div class="article-byline">
+            <span>Автор: {{ article.author.username }}</span>
+        </div>
 
-    <div>
-        {{ article.content|linebreaks }}
-    </div>
+    </header>
 
     {% if article.cover_image %}
         <img
+            class="article-cover"
             src="{{ article.cover_image.url }}"
             alt="{{ article.title }}"
-            style="max-width: 500px;"
         >
     {% endif %}
 
-    <p>
-        <strong>Категории:</strong>
+    <div class="article-taxonomy">
 
         {% for category in article.categories.all %}
-            {{ category.name }}
-
-            {% if not forloop.last %}
-                ,
-            {% endif %}
-
-        {% empty %}
-            Не указаны
+            <span class="category-chip">
+                {{ category.name }}
+            </span>
         {% endfor %}
-    </p>
-
-    <p>
-        <strong>Теги:</strong>
 
         {% for tag in article.tags.all %}
-            {{ tag.name }}
-
-            {% if not forloop.last %}
-                ,
-            {% endif %}
-
-        {% empty %}
-            Не указаны
+            <span class="tag-chip">
+                #{{ tag.name }}
+            </span>
         {% endfor %}
-    </p>
 
-</article>
+    </div>
 
-<hr>
+    <div class="article-content">
+        {{ article.content|linebreaks }}
+    </div>
 
-<h2>Решение</h2>
+    <section class="editor-layout" style="margin-top: 46px;">
 
-<form method="post">
-    {% csrf_token %}
+        <div class="editor-card">
 
-    {{ form.as_p }}
+            <p class="eyebrow">Decision</p>
 
-    <button type="submit">
-        Сохранить решение
-    </button>
-</form>
+            <h2 class="editor-card__title">
+                Решение модератора
+            </h2>
 
-<p>
-    <a href="{% url 'moderation_queue' %}">
-        Назад к очереди
-    </a>
-</p>
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+
+                <button type="submit">
+                    Сохранить решение
+                </button>
+            </form>
+
+        </div>
+
+    </section>
+
+</div>
 
 {% endblock %}

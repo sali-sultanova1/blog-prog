@@ -4,60 +4,64 @@
 
 {% block content %}
 
-<h1>Мои закладки</h1>
+<div class="page-heading">
 
-{% for bookmark in bookmarks %}
-
-    <article>
-
-        <h2>
-            <a href="{% url 'article_detail' bookmark.article.slug %}">
-                {{ bookmark.article.title }}
-            </a>
-        </h2>
-
-        <p>
-            Автор:
-
-            <a href="{% url 'author_profile' bookmark.article.author.username %}">
-                {{ bookmark.article.author.username }}
-            </a>
+    <div>
+        <p class="eyebrow">Reading list</p>
+        <h1 class="page-title">Закладки</h1>
+        <p class="page-intro">
+            Материалы, к которым вы хотите вернуться позже.
         </p>
+    </div>
 
-        <p>
-            Добавлено в закладки:
-            {{ bookmark.created_at|date:"d.m.Y H:i" }}
-        </p>
+</div>
 
-        <p>
-            {{ bookmark.article.summary }}
-        </p>
+<div class="list-stack">
 
-        <p>
-            <a href="{% url 'article_detail' bookmark.article.slug %}">
-                Читать статью
-            </a>
-        </p>
+    {% for bookmark in bookmarks %}
 
-        <form
-            method="post"
-            action="{% url 'toggle_bookmark' bookmark.article.slug %}"
-        >
-            {% csrf_token %}
+        <article class="list-card">
 
-            <button type="submit">
-                Убрать из закладок
-            </button>
-        </form>
+            <div>
 
-    </article>
+                <h2 class="list-card__title">
+                    <a href="{% url 'article_detail' bookmark.article.slug %}">
+                        {{ bookmark.article.title }}
+                    </a>
+                </h2>
 
-{% empty %}
+                <p class="list-card__meta">
+                    Автор:
+                    <a href="{% url 'author_profile' bookmark.article.author.username %}">
+                        {{ bookmark.article.author.username }}
+                    </a>
+                    ·
+                    Сохранено {{ bookmark.created_at|date:"d.m.Y H:i" }}
+                </p>
 
-    <p>
-        У вас пока нет сохранённых статей.
-    </p>
+                <p class="list-card__summary">
+                    {{ bookmark.article.summary }}
+                </p>
 
-{% endfor %}
+            </div>
+
+            <div class="list-actions">
+                <a href="{% url 'article_detail' bookmark.article.slug %}">
+                    Читать →
+                </a>
+            </div>
+
+        </article>
+
+    {% empty %}
+
+        <div class="empty-state">
+            <h2>Закладок пока нет</h2>
+            <p>Сохраняйте интересные статьи, чтобы они появились здесь.</p>
+        </div>
+
+    {% endfor %}
+
+</div>
 
 {% endblock %}

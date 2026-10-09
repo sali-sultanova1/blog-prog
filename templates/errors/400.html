@@ -1,21 +1,23 @@
 {% extends "base.html" %}
 
-{% block title %}
-Ошибка 400
-{% endblock %}
+{% block title %}Некорректный запрос{% endblock %}
 
 {% block content %}
 
-<h1>400 — Некорректный запрос</h1>
+<section class="error-page">
 
-<p>
-    Сервер не смог обработать этот запрос.
-</p>
+    <span class="error-code">400</span>
 
-<p>
-    <a href="{% url 'article_list' %}">
-        Вернуться к статьям
-    </a>
-</p>
+    <h1>Некорректный запрос</h1>
+
+    <p>Сервер не смог обработать этот запрос.</p>
+
+    <p>
+        <a class="button button--primary" href="{% url 'article_list' %}">
+            Вернуться к статьям
+        </a>
+    </p>
+
+</section>
 
 {% endblock %}

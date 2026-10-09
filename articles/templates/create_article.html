@@ -4,22 +4,37 @@
 
 {% block content %}
 
-<h1>Создать статью</h1>
+<section class="editor-layout">
 
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
+    <div class="editor-card">
 
-    {{ form.as_p }}
+        <p class="eyebrow">New story</p>
 
-    <button type="submit">
-        Сохранить черновик
-    </button>
-</form>
+        <h1 class="editor-card__title">
+            Создать статью
+        </h1>
 
-<p>
-    <a href="{% url 'my_articles' %}">
-        Назад к моим статьям
-    </a>
-</p>
+        <p class="editor-card__intro">
+            Сначала материал сохранится как черновик. После этого его можно отправить на модерацию.
+        </p>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+
+            <button type="submit">
+                Сохранить черновик
+            </button>
+        </form>
+
+        <div class="editor-back">
+            <a href="{% url 'my_articles' %}">
+                ← Назад к моим статьям
+            </a>
+        </div>
+
+    </div>
+
+</section>
 
 {% endblock %}

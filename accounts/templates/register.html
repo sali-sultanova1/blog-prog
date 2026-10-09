@@ -4,18 +4,53 @@
 
 {% block content %}
 
-<h1>Регистрация</h1>
+<section class="auth-layout">
 
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
+    <div class="auth-art">
+        <div>
+            <p class="eyebrow">Join the community</p>
+            <h2 class="auth-art__title">
+                Найдите свой<br>
+                голос и свою<br>
+                аудиторию.
+            </h2>
+        </div>
 
-    <button type="submit">Зарегистрироваться</button>
-</form>
+        <p class="auth-art__text">
+            Создайте аккаунт, чтобы сохранять материалы, участвовать в обсуждениях и стать автором.
+        </p>
+    </div>
 
-<p>
-    Уже есть аккаунт?
-    <a href="{% url 'login' %}">Войти</a>
-</p>
+    <div class="auth-panel">
+
+        <p class="eyebrow">Create account</p>
+
+        <h1 class="auth-title">
+            Регистрация
+        </h1>
+
+        <p class="auth-subtitle">
+            Это займёт меньше минуты.
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+
+            <button type="submit">
+                Создать аккаунт
+            </button>
+        </form>
+
+        <p class="auth-footer">
+            Уже есть аккаунт?
+            <a href="{% url 'login' %}">
+                Войти
+            </a>
+        </p>
+
+    </div>
+
+</section>
 
 {% endblock %}

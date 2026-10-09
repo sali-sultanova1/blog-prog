@@ -10,6 +10,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const previousButton = document.getElementById("previous-page");
     const nextButton = document.getElementById("next-page");
     const pageNumber = document.getElementById("page-number");
+
+    if (!form || !resultsContainer) {
+        return;
+    }
+
     const apiUrl = resultsContainer.dataset.apiUrl;
     const articleUrlTemplate = resultsContainer.dataset.articleUrl;
     const authorUrlTemplate = resultsContainer.dataset.authorUrl;
@@ -20,6 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function loadArticles(page = 1) {
         currentPage = page;
+
         const url = new URL(apiUrl, window.location.origin);
         const query = searchInput.value.trim();
         const category = categorySelect.value;
@@ -38,13 +44,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         url.searchParams.set("page", currentPage);
-        searchStatus.textContent = "Загрузка...";
+
+        searchStatus.textContent = "Загрузка…";
 
         try {
             const response = await fetch(url);
 
             if (!response.ok) {
-                throw new Error("Не удалось загрузить статьи.");
+                throw new Error("Articles request failed");
             }
 
             const data = await response.json();
@@ -53,6 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
             renderPagination(data);
 
             searchStatus.textContent = `Найдено: ${data.count}`;
+
             updateBrowserUrl(query, category, tag);
         } catch (error) {
             searchStatus.textContent = "Не удалось загрузить статьи.";
@@ -62,40 +70,104 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderArticles(articles) {
         resultsContainer.replaceChildren();
 
-        if (articles.length === 0) {
-            const message = document.createElement("p");
-            message.textContent = "По вашему запросу статьи не найдены.";
-            resultsContainer.appendChild(message);
+        if (!articles.length) {
+            const empty = document.createElement("div");
+            empty.className = "empty-state";
+
+            const title = document.createElement("h2");
+            title.textContent = "Ничего не найдено";
+
+            const text = document.createElement("p");
+            text.textContent = "Попробуйте изменить запрос или выбрать другие фильтры.";
+
+            empty.append(title, text);
+            resultsContainer.appendChild(empty);
             return;
         }
 
-        for (const article of articles) {
-            resultsContainer.appendChild(createArticleElement(article));
-        }
+        articles.forEach((article, index) => {
+            resultsContainer.appendChild(createArticleElement(article, index));
+        });
     }
 
-    function createArticleElement(article) {
-        const articleElement = document.createElement("article");
-        const articleUrl = articleUrlTemplate.replace("__slug__", encodeURIComponent(article.slug));
+    function createArticleElement(article, index) {
+        const element = document.createElement("article");
+
+        element.className = "story-card";
+
+        if (index === 0) {
+            element.classList.add("story-card--feature");
+        }
+
+        const articleUrl = articleUrlTemplate.replace(
+            "__slug__",
+            encodeURIComponent(article.slug)
+        );
+
+        const media = document.createElement("a");
+        media.className = "story-media";
+        media.href = articleUrl;
 
         if (article.cover_image) {
             const image = document.createElement("img");
             image.src = article.cover_image;
             image.alt = article.title;
-            image.style.maxWidth = "400px";
-            articleElement.appendChild(image);
+            media.appendChild(image);
+        } else {
+            const placeholder = document.createElement("div");
+            placeholder.className = "story-placeholder";
+            placeholder.textContent = "N";
+            media.appendChild(placeholder);
         }
 
-        const title = document.createElement("h2");
-        const titleLink = document.createElement("a");
+        const body = document.createElement("div");
+        body.className = "story-body";
 
+        const topline = document.createElement("div");
+        topline.className = "story-topline";
+
+        const category = document.createElement("span");
+        category.className = "category-chip";
+        category.textContent = article.category_names?.[0] || "История";
+        topline.appendChild(category);
+
+        const title = document.createElement("h2");
+        title.className = "story-title";
+
+        const titleLink = document.createElement("a");
         titleLink.href = articleUrl;
         titleLink.textContent = article.title;
-        title.appendChild(titleLink);
-        articleElement.appendChild(title);
 
-        const authorParagraph = document.createElement("p");
-        authorParagraph.append("Автор: ");
+        title.appendChild(titleLink);
+
+        body.append(topline, title);
+
+        if (article.summary) {
+            const summary = document.createElement("p");
+            summary.className = "story-summary";
+            summary.textContent = article.summary;
+            body.appendChild(summary);
+        }
+
+        if (article.tag_names?.length) {
+            const tags = document.createElement("div");
+            tags.className = "story-tags";
+
+            article.tag_names.forEach((name) => {
+                const tag = document.createElement("span");
+                tag.className = "tag-chip";
+                tag.textContent = `#${name}`;
+                tags.appendChild(tag);
+            });
+
+            body.appendChild(tags);
+        }
+
+        const meta = document.createElement("div");
+        meta.className = "story-meta";
+
+        const author = document.createElement("span");
+        author.append("Автор: ");
 
         if (isAuthenticated) {
             const authorLink = document.createElement("a");
@@ -106,55 +178,33 @@ document.addEventListener("DOMContentLoaded", () => {
             );
 
             authorLink.textContent = article.author;
-            authorParagraph.appendChild(authorLink);
+            author.appendChild(authorLink);
         } else {
-            authorParagraph.append(article.author);
+            author.append(article.author);
         }
 
-        articleElement.appendChild(authorParagraph);
-
-        const publishedParagraph = document.createElement("p");
+        const date = document.createElement("span");
 
         if (article.published_at) {
-            const publishedDate = new Date(article.published_at);
-            publishedParagraph.textContent = `Опубликовано: ${publishedDate.toLocaleString("ru-RU")}`;
+            date.textContent = new Date(article.published_at)
+                .toLocaleDateString("ru-RU");
         }
 
-        articleElement.appendChild(publishedParagraph);
+        const likes = document.createElement("span");
+        likes.className = "story-stat";
+        likes.textContent = `♥ ${article.likes_count ?? 0}`;
 
-        const stats = document.createElement("p");
-        stats.textContent = `Лайков: ${article.likes_count ?? 0} · Комментариев: ${article.comments_count ?? 0}`;
-        articleElement.appendChild(stats);
+        const comments = document.createElement("span");
+        comments.className = "story-stat";
+        comments.textContent = `◌ ${article.comments_count ?? 0}`;
 
-        const summary = document.createElement("p");
-        summary.textContent = article.summary;
-        articleElement.appendChild(summary);
+        meta.append(author, date, likes, comments);
 
-        const categories = document.createElement("p");
-        const categoriesTitle = document.createElement("strong");
+        body.appendChild(meta);
 
-        categoriesTitle.textContent = "Категории: ";
-        categories.appendChild(categoriesTitle);
-        categories.append(article.category_names.length ? article.category_names.join(", ") : "Не указаны");
-        articleElement.appendChild(categories);
+        element.append(media, body);
 
-        const tags = document.createElement("p");
-        const tagsTitle = document.createElement("strong");
-
-        tagsTitle.textContent = "Теги: ";
-        tags.appendChild(tagsTitle);
-        tags.append(article.tag_names.length ? article.tag_names.join(", ") : "Не указаны");
-        articleElement.appendChild(tags);
-
-        const readParagraph = document.createElement("p");
-        const readLink = document.createElement("a");
-
-        readLink.href = articleUrl;
-        readLink.textContent = "Читать статью";
-        readParagraph.appendChild(readLink);
-        articleElement.appendChild(readParagraph);
-
-        return articleElement;
+        return element;
     }
 
     function renderPagination(data) {
@@ -167,13 +217,16 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         pagination.hidden = false;
+
         previousButton.disabled = !hasPrevious;
         nextButton.disabled = !hasNext;
+
         pageNumber.textContent = `Страница ${currentPage}`;
     }
 
     function updateBrowserUrl(query, category, tag) {
         const url = new URL(window.location.href);
+
         url.search = "";
 
         if (query) {

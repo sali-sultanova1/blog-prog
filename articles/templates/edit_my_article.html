@@ -4,27 +4,37 @@
 
 {% block content %}
 
-<h1>Редактировать статью</h1>
+<section class="editor-layout">
 
-<p>
-    Статья:
-    <strong>{{ article.title }}</strong>
-</p>
+    <div class="editor-card">
 
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
+        <p class="eyebrow">Edit story</p>
 
-    {{ form.as_p }}
+        <h1 class="editor-card__title">
+            Редактировать статью
+        </h1>
 
-    <button type="submit">
-        Сохранить изменения
-    </button>
-</form>
+        <p class="editor-card__intro">
+            {{ article.title }}
+        </p>
 
-<p>
-    <a href="{% url 'my_articles' %}">
-        Назад к моим статьям
-    </a>
-</p>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+
+            <button type="submit">
+                Сохранить изменения
+            </button>
+        </form>
+
+        <div class="editor-back">
+            <a href="{% url 'my_articles' %}">
+                ← Назад к моим статьям
+            </a>
+        </div>
+
+    </div>
+
+</section>
 
 {% endblock %}

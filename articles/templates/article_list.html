@@ -1,32 +1,37 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}
-Статьи
-{% endblock %}
+{% block title %}Статьи{% endblock %}
 
 {% block content %}
 
-<h1>Статьи</h1>
-
-<form method="get" id="article-filter-form">
-
+<section class="home-hero">
     <div>
-        <label for="q">Поиск</label>
+        <p class="eyebrow">Newsroom · Stories · Ideas</p>
+        <h1 class="home-hero__title">Истории,<br>которые стоит читать.</h1>
+    </div>
 
+    <div class="home-hero__aside">
+        Авторские публикации, новости и мнения — в одном спокойном пространстве без лишнего визуального шума.
+    </div>
+</section>
+
+<form method="get" id="article-filter-form" class="filter-panel">
+
+    <div class="filter-field">
+        <label for="q">Поиск</label>
         <input
-            type="text"
+            type="search"
             id="q"
             name="q"
             value="{{ query }}"
-            placeholder="Поиск по статьям"
+            placeholder="Название, текст или автор…"
             autocomplete="off"
         >
     </div>
 
-    <div>
+    <div class="filter-field">
         <label for="category">Категория</label>
-
         <select id="category" name="category">
             <option value="">Все категории</option>
 
@@ -41,9 +46,8 @@
         </select>
     </div>
 
-    <div>
+    <div class="filter-field">
         <label for="tag">Тег</label>
-
         <select id="tag" name="tag">
             <option value="">Все теги</option>
 
@@ -58,22 +62,22 @@
         </select>
     </div>
 
-    <button type="submit">
-        Найти
-    </button>
-
-    <a href="{% url 'article_list' %}" id="reset-filters">
-        Сбросить фильтры
-    </a>
+    <div class="filter-actions">
+        <button class="button button--primary" type="submit">Найти</button>
+    </div>
 
 </form>
 
-<hr>
-
-<p id="search-status"></p>
+<div class="results-bar">
+    <p id="search-status"></p>
+    <a class="reset-link" id="reset-filters" href="{% url 'article_list' %}">
+        Сбросить фильтры
+    </a>
+</div>
 
 <div
     id="article-results"
+    class="news-grid"
     data-api-url="{% url 'api-article-list' %}"
     data-article-url="{% url 'article_detail' '__slug__' %}"
     data-author-url="{% url 'author_profile' '__username__' %}"
@@ -82,100 +86,93 @@
 
     {% for article in articles %}
 
-        <article>
+        <article class="story-card {% if forloop.first %}story-card--feature{% endif %}">
 
-            {% if article.cover_image %}
-                <img
-                    src="{{ article.cover_image.url }}"
-                    alt="{{ article.title }}"
-                    style="max-width: 400px;"
-                >
-            {% endif %}
-
-            <h2>
-                <a href="{% url 'article_detail' article.slug %}">
-                    {{ article.title }}
-                </a>
-            </h2>
-
-            <p>
-                Автор:
-
-                {% if user.is_authenticated %}
-                    <a href="{% url 'author_profile' article.author.username %}">
-                        {{ article.author.username }}
-                    </a>
+            <a class="story-media" href="{% url 'article_detail' article.slug %}">
+                {% if article.cover_image %}
+                    <img src="{{ article.cover_image.url }}" alt="{{ article.title }}">
                 {% else %}
-                    {{ article.author.username }}
+                    <div class="story-placeholder">N</div>
                 {% endif %}
-            </p>
+            </a>
 
-            <p>
-                Опубликовано:
-                {{ article.published_at|date:"d.m.Y H:i" }}
-            </p>
+            <div class="story-body">
 
-            <p>
-                Лайков: {{ article.likes_count }}
-                ·
-                Комментариев: {{ article.comments_count }}
-            </p>
+                <div class="story-topline">
+                    {% with first_category=article.categories.first %}
+                        {% if first_category %}
+                            <span class="category-chip">{{ first_category.name }}</span>
+                        {% else %}
+                            <span class="category-chip">История</span>
+                        {% endif %}
+                    {% endwith %}
+                </div>
 
-            <p>
-                {{ article.summary }}
-            </p>
+                <h2 class="story-title">
+                    <a href="{% url 'article_detail' article.slug %}">
+                        {{ article.title }}
+                    </a>
+                </h2>
 
-            <p>
-                <strong>Категории:</strong>
+                {% if article.summary %}
+                    <p class="story-summary">
+                        {{ article.summary }}
+                    </p>
+                {% endif %}
 
-                {% for category in article.categories.all %}
-                    {{ category.name }}{% if not forloop.last %}, {% endif %}
-                {% empty %}
-                    Не указаны
-                {% endfor %}
-            </p>
+                {% if article.tags.all %}
+                    <div class="story-tags">
+                        {% for tag in article.tags.all %}
+                            <span class="tag-chip">#{{ tag.name }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
 
-            <p>
-                <strong>Теги:</strong>
+                <div class="story-meta">
 
-                {% for tag in article.tags.all %}
-                    {{ tag.name }}{% if not forloop.last %}, {% endif %}
-                {% empty %}
-                    Не указаны
-                {% endfor %}
-            </p>
+                    <span>
+                        Автор:
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'author_profile' article.author.username %}">
+                                {{ article.author.username }}
+                            </a>
+                        {% else %}
+                            {{ article.author.username }}
+                        {% endif %}
+                    </span>
 
-            <p>
-                <a href="{% url 'article_detail' article.slug %}">
-                    Читать статью
-                </a>
-            </p>
+                    <span>{{ article.published_at|date:"d.m.Y" }}</span>
+
+                    <span class="story-stat">
+                        ♥ {{ article.likes_count }}
+                    </span>
+
+                    <span class="story-stat">
+                        ◌ {{ article.comments_count }}
+                    </span>
+
+                </div>
+
+            </div>
 
         </article>
 
     {% empty %}
 
-        <p>
-            По вашему запросу статьи не найдены.
-        </p>
+        <div class="empty-state">
+            <h2>Ничего не найдено</h2>
+            <p>Попробуйте изменить запрос или выбрать другие фильтры.</p>
+        </div>
 
     {% endfor %}
 
 </div>
 
-
-<div id="api-pagination" hidden>
-    <button type="button" id="previous-page">
-        Назад
-    </button>
-
+<div id="api-pagination" class="pagination-bar" hidden>
+    <button type="button" id="previous-page">← Назад</button>
     <span id="page-number"></span>
-
-    <button type="button" id="next-page">
-        Далее
-    </button>
+    <button type="button" id="next-page">Далее →</button>
 </div>
-
 
 <script src="{% static 'js/article_list.js' %}"></script>
 

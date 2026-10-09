@@ -4,22 +4,33 @@
 
 {% block content %}
 
-<h1>Редактировать комментарий</h1>
+<section class="editor-layout">
 
-<form method="post">
-    {% csrf_token %}
+    <div class="editor-card">
 
-    {{ form.as_p }}
+        <p class="eyebrow">Comment</p>
 
-    <button type="submit">
-        Сохранить изменения
-    </button>
-</form>
+        <h1 class="editor-card__title">
+            Редактировать комментарий
+        </h1>
 
-<p>
-    <a href="{% url 'article_detail' comment.article.slug %}">
-        Назад к статье
-    </a>
-</p>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+
+            <button type="submit">
+                Сохранить изменения
+            </button>
+        </form>
+
+        <div class="editor-back">
+            <a href="{% url 'article_detail' comment.article.slug %}">
+                ← Назад к статье
+            </a>
+        </div>
+
+    </div>
+
+</section>
 
 {% endblock %}

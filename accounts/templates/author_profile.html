@@ -1,115 +1,135 @@
 {% extends "base.html" %}
 
-{% block title %}
-{{ author_profile.user.username }}
-{% endblock %}
+{% block title %}{{ author_profile.user.username }}{% endblock %}
 
 {% block content %}
 
-<h1>Профиль автора</h1>
+<section class="profile-card">
 
-{% if author_profile.user.avatar %}
-    <img
-        src="{{ author_profile.user.avatar.url }}"
-        alt="{{ author_profile.user.username }}"
-        style="max-width: 200px;"
-    >
-{% endif %}
-
-<h2>
-    {{ author_profile.user.username }}
-</h2>
-
-{% if author_profile.user.first_name or author_profile.user.last_name %}
-    <p>
-        {{ author_profile.user.first_name }}
-        {{ author_profile.user.last_name }}
-    </p>
-{% endif %}
-
-{% if author_profile.specialization %}
-    <p>
-        <strong>Специализация:</strong>
-        {{ author_profile.specialization }}
-    </p>
-{% endif %}
-
-{% if author_profile.user.bio %}
-    <p>
-        <strong>О себе:</strong>
-        {{ author_profile.user.bio }}
-    </p>
-{% endif %}
-
-{% if author_profile.portfolio_url %}
-    <p>
-        <a
-            href="{{ author_profile.portfolio_url }}"
-            target="_blank"
-            rel="noopener"
+    {% if author_profile.user.avatar %}
+        <img
+            class="profile-avatar"
+            src="{{ author_profile.user.avatar.url }}"
+            alt="{{ author_profile.user.username }}"
         >
-            Портфолио автора
-        </a>
-    </p>
-{% endif %}
+    {% else %}
+        <div class="profile-avatar profile-avatar--fallback">
+            {{ author_profile.user.username|first|upper }}
+        </div>
+    {% endif %}
 
-<h2>Статистика</h2>
+    <div>
 
-<p>
-    Опубликовано статей:
-    {{ articles_count }}
-</p>
+        <p class="eyebrow">Author</p>
 
-<p>
-    Всего лайков:
-    {{ stats.total_likes }}
-</p>
+        <h1 class="profile-title">
+            {{ author_profile.user.username }}
+        </h1>
 
-<p>
-    Всего комментариев:
-    {{ stats.total_comments }}
-</p>
+        {% if author_profile.user.first_name or author_profile.user.last_name %}
+            <p class="profile-secondary">
+                {{ author_profile.user.first_name }}
+                {{ author_profile.user.last_name }}
+            </p>
+        {% endif %}
 
-<hr>
+        {% if author_profile.specialization %}
+            <p class="profile-secondary">
+                {{ author_profile.specialization }}
+            </p>
+        {% endif %}
 
-<h2>Опубликованные статьи</h2>
+        {% if author_profile.user.bio %}
+            <p class="profile-bio">
+                {{ author_profile.user.bio }}
+            </p>
+        {% endif %}
 
-{% for article in articles %}
+        {% if author_profile.portfolio_url %}
+            <div class="profile-actions">
+                <a
+                    href="{{ author_profile.portfolio_url }}"
+                    target="_blank"
+                    rel="noopener"
+                >
+                    Портфолио ↗
+                </a>
+            </div>
+        {% endif %}
 
-    <article>
+    </div>
 
-        <h3>
-            <a href="{% url 'article_detail' article.slug %}">
-                {{ article.title }}
-            </a>
-        </h3>
+</section>
 
-        <p>
-            {{ article.published_at|date:"d.m.Y H:i" }}
-        </p>
+<div class="stats-grid">
 
-        <p>
-            {{ article.summary }}
-        </p>
+    <div class="stat">
+        <strong>{{ articles_count }}</strong>
+        <span>Публикаций</span>
+    </div>
 
-        <a href="{% url 'article_detail' article.slug %}">
-            Читать статью
-        </a>
+    <div class="stat">
+        <strong>{{ stats.total_likes|default:0 }}</strong>
+        <span>Лайков</span>
+    </div>
 
-    </article>
+    <div class="stat">
+        <strong>{{ stats.total_comments|default:0 }}</strong>
+        <span>Комментариев</span>
+    </div>
 
-{% empty %}
+</div>
 
-    <p>
-        У этого автора пока нет опубликованных статей.
-    </p>
+<div class="page-heading">
+    <div>
+        <p class="eyebrow">Published work</p>
+        <h2 class="page-title">
+            Статьи автора
+        </h2>
+    </div>
+</div>
 
-{% endfor %}
+<div class="list-stack">
 
-<p>
-    <a href="{% url 'article_list' %}">
-        Назад к статьям
-    </a>
-</p>
+    {% for article in articles %}
+
+        <article class="list-card">
+
+            <div>
+
+                <h3 class="list-card__title">
+                    <a href="{% url 'article_detail' article.slug %}">
+                        {{ article.title }}
+                    </a>
+                </h3>
+
+                <p class="list-card__meta">
+                    {{ article.published_at|date:"d.m.Y H:i" }}
+                </p>
+
+                <p class="list-card__summary">
+                    {{ article.summary }}
+                </p>
+
+            </div>
+
+            <div class="list-actions">
+                <a href="{% url 'article_detail' article.slug %}">
+                    Читать →
+                </a>
+            </div>
+
+        </article>
+
+    {% empty %}
+
+        <div class="empty-state">
+            <h2>Пока пусто</h2>
+            <p>У этого автора ещё нет опубликованных статей.</p>
+        </div>
+
+    {% endfor %}
+
+</div>
 
 {% endblock %}

@@ -4,21 +4,37 @@
 
 {% block content %}
 
-<h1>Редактировать профиль</h1>
+<section class="editor-layout">
 
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
+    <div class="editor-card">
 
-    <button type="submit">
-        Сохранить
-    </button>
-</form>
+        <p class="eyebrow">Profile settings</p>
 
-<p>
-    <a href="{% url 'profile' %}">
-        Назад к профилю
-    </a>
-</p>
+        <h1 class="editor-card__title">
+            Редактировать профиль
+        </h1>
+
+        <p class="editor-card__intro">
+            Обновите имя, биографию, email или фотографию профиля.
+        </p>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+
+            <button type="submit">
+                Сохранить изменения
+            </button>
+        </form>
+
+        <div class="editor-back">
+            <a href="{% url 'profile' %}">
+                ← Назад к профилю
+            </a>
+        </div>
+
+    </div>
+
+</section>
 
 {% endblock %}

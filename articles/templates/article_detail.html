@@ -1,285 +1,276 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}
-{{ article.title }}
-{% endblock %}
+{% block title %}{{ article.title }}{% endblock %}
 
 {% block content %}
 
-<p>
-    <a href="{% url 'article_list' %}">
-        Назад к статьям
+<div class="article-shell">
+
+    <a class="article-back" href="{% url 'article_list' %}">
+        ← Все статьи
     </a>
-</p>
 
-
-<article>
-
-    <h1>
-        {{ article.title }}
-    </h1>
-
-
-    <p>
-        Автор:
-
-        {% if user.is_authenticated %}
-            <a href="{% url 'author_profile' article.author.username %}">
-                {{ article.author.username }}
-            </a>
-        {% else %}
-            {{ article.author.username }}
-        {% endif %}
-    </p>
-
-
-    <p>
-        Опубликовано:
-        {{ article.published_at|date:"d.m.Y H:i" }}
-    </p>
-
-
-    {% if article.cover_image %}
-        <img
-            src="{{ article.cover_image.url }}"
-            alt="{{ article.title }}"
-            style="max-width: 600px;"
-        >
-    {% endif %}
-
-
-    <p>
-        <strong>Категории:</strong>
-
-        {% for category in article.categories.all %}
-
-            {{ category.name }}
-
-            {% if not forloop.last %}
-                ,
-            {% endif %}
-
-        {% empty %}
-
-            Не указаны
-
-        {% endfor %}
-    </p>
-
-
-    <p>
-        <strong>Теги:</strong>
-
-        {% for tag in article.tags.all %}
-
-            {{ tag.name }}
-
-            {% if not forloop.last %}
-                ,
-            {% endif %}
-
-        {% empty %}
-
-            Не указаны
-
-        {% endfor %}
-    </p>
-
-
-    <hr>
-
-
-    <div>
-        {{ article.content|linebreaks }}
-    </div>
-
-</article>
-
-
-<hr>
-
-
-<h2>Реакции</h2>
-
-
-<p>
-    Лайков:
-    <span id="likes-count">
-        {{ article.likes.count }}
-    </span>
-</p>
-
-
-{% if user.is_authenticated %}
-
-    <button
-        type="button"
-        id="like-button"
-        data-url="{% url 'api-article-like' article.pk %}"
-    >
-        {% if is_liked %}
-            Убрать лайк
-        {% else %}
-            Поставить лайк
-        {% endif %}
-    </button>
-
-
-    <button
-        type="button"
-        id="bookmark-button"
-        data-url="{% url 'api-article-bookmark' article.pk %}"
-    >
-        {% if is_bookmarked %}
-            Убрать из закладок
-        {% else %}
-            Сохранить в закладки
-        {% endif %}
-    </button>
-
-{% else %}
-
-    <p>
-        <a href="{% url 'login' %}">
-            Войдите
-        </a>,
-        чтобы ставить лайки, сохранять статьи и комментировать.
-    </p>
-
-{% endif %}
-
-
-<hr>
-
-
-<h2>Комментарии</h2>
-
-
-{% if user.is_authenticated %}
-
-    <form
-        id="comment-form"
-        data-url="{% url 'api-comment-list' %}"
-        data-article-id="{{ article.pk }}"
-    >
-        {% csrf_token %}
-
-        <p>
-            <label for="comment-content">
-                Комментарий
-            </label>
-        </p>
-
-        <textarea
-            id="comment-content"
-            name="content"
-            rows="5"
-            required
-        ></textarea>
-
-        <br>
-
-        <button type="submit">
-            Оставить комментарий
-        </button>
-    </form>
-
-
-    <hr>
-
-{% endif %}
-
-
-<div
-    id="comments"
-    data-base-url="{% url 'api-comment-list' %}"
->
-
-    {% for comment in comments %}
-
-        <div
-            class="comment"
-            data-comment-id="{{ comment.pk }}"
-            data-url="{% url 'api-comment-detail' comment.pk %}"
-        >
-
-            <p>
-                <strong class="comment-username">
-                    {{ comment.user.username }}
-                </strong>
-            </p>
-
-
-            <div class="comment-content">
-                {{ comment.content|linebreaks }}
+    <article class="article-frame">
+
+        {% if article.cover_image %}
+            <div class="article-cover-wrap">
+                <img
+                    class="article-cover"
+                    src="{{ article.cover_image.url }}"
+                    alt="{{ article.title }}"
+                >
             </div>
+        {% endif %}
 
+        <div class="article-body">
 
-            <p>
-                {{ comment.created_at|date:"d.m.Y H:i" }}
-            </p>
+            <header class="article-header">
 
+                <p class="eyebrow">
+                    {% with first_category=article.categories.first %}
+                        {% if first_category %}
+                            {{ first_category.name }}
+                        {% else %}
+                            Article
+                        {% endif %}
+                    {% endwith %}
+                </p>
 
-            {% if user.is_authenticated and comment.user == user %}
+                <h1 class="article-title">
+                    {{ article.title }}
+                </h1>
 
-                <button
-                    type="button"
-                    class="edit-comment-button"
-                >
-                    Редактировать
-                </button>
+                {% if article.summary %}
+                    <p class="article-deck">
+                        {{ article.summary }}
+                    </p>
+                {% endif %}
 
+                <div class="article-byline">
 
-                <button
-                    type="button"
-                    class="delete-comment-button"
-                >
-                    Удалить
-                </button>
+                    {% if user.is_authenticated %}
+                        <a
+                            class="author-inline"
+                            href="{% url 'author_profile' article.author.username %}"
+                        >
+                            {% if article.author.avatar %}
+                                <img
+                                    class="author-inline__avatar"
+                                    src="{{ article.author.avatar.url }}"
+                                    alt=""
+                                >
+                            {% else %}
+                                <span class="author-inline__avatar author-inline__fallback">
+                                    {{ article.author.username|first|upper }}
+                                </span>
+                            {% endif %}
 
+                            {{ article.author.username }}
+                        </a>
+                    {% else %}
+                        <span class="author-inline">
+                            <span class="author-inline__avatar author-inline__fallback">
+                                {{ article.author.username|first|upper }}
+                            </span>
+                            {{ article.author.username }}
+                        </span>
+                    {% endif %}
 
-                <div
-                    class="comment-edit"
-                    hidden
-                >
+                    <span>{{ article.published_at|date:"d.m.Y H:i" }}</span>
 
-                    <textarea rows="4">{{ comment.content }}</textarea>
-
-
-                    <button
-                        type="button"
-                        class="save-comment-button"
-                    >
-                        Сохранить
-                    </button>
-
-
-                    <button
-                        type="button"
-                        class="cancel-comment-button"
-                    >
-                        Отмена
-                    </button>
+                    <span>
+                        ♥ <span id="likes-count">{{ article.likes.count }}</span>
+                    </span>
 
                 </div>
 
-            {% endif %}
+            </header>
+
+            <div class="article-taxonomy">
+
+                {% for category in article.categories.all %}
+                    <span class="category-chip">
+                        {{ category.name }}
+                    </span>
+                {% endfor %}
+
+                {% for tag in article.tags.all %}
+                    <span class="tag-chip">
+                        #{{ tag.name }}
+                    </span>
+                {% endfor %}
+
+            </div>
+
+            <div class="article-content">
+                {{ article.content|linebreaks }}
+            </div>
+
+            <section class="article-section article-social">
+
+                <div class="social-heading">
+                    <h2 class="section-title">Реакции</h2>
+                </div>
+
+                <div class="article-actions-panel">
+
+                    {% if user.is_authenticated %}
+
+                        <div class="reaction-row">
+
+                            <button
+                                type="button"
+                                id="like-button"
+                                class="reaction-button {% if is_liked %}is-active{% endif %}"
+                                data-url="{% url 'api-article-like' article.pk %}"
+                            >
+                                ♥
+                                <span>Нравится</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                id="bookmark-button"
+                                class="reaction-button {% if is_bookmarked %}is-active{% endif %}"
+                                data-url="{% url 'api-article-bookmark' article.pk %}"
+                            >
+                                ◇
+                                <span>
+                                    {% if is_bookmarked %}
+                                        Сохранено
+                                    {% else %}
+                                        Сохранить
+                                    {% endif %}
+                                </span>
+                            </button>
+
+                        </div>
+
+                    {% else %}
+
+                        <div class="login-hint">
+                            <a href="{% url 'login' %}">Войдите</a>,
+                            чтобы ставить лайки, сохранять статьи и участвовать в обсуждении.
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </section>
+
+            <section class="article-section article-social">
+
+                <div class="social-heading">
+                    <h2 class="section-title">Комментарии</h2>
+                </div>
+
+                {% if user.is_authenticated %}
+
+                    <form
+                        id="comment-form"
+                        class="comment-form"
+                        data-url="{% url 'api-comment-list' %}"
+                        data-article-id="{{ article.pk }}"
+                    >
+                        {% csrf_token %}
+
+                        <label for="comment-content">
+                            Ваш комментарий
+                        </label>
+
+                        <textarea
+                            id="comment-content"
+                            name="content"
+                            rows="5"
+                            placeholder="Поделитесь мнением…"
+                            required
+                        ></textarea>
+
+                        <div class="comment-form__footer">
+                            <button type="submit">
+                                Опубликовать
+                            </button>
+                        </div>
+
+                    </form>
+
+                {% endif %}
+
+                <div
+                    id="comments"
+                    class="comments-list"
+                    data-base-url="{% url 'api-comment-list' %}"
+                >
+
+                    {% for comment in comments %}
+
+                        <div
+                            class="comment"
+                            data-comment-id="{{ comment.pk }}"
+                            data-url="{% url 'api-comment-detail' comment.pk %}"
+                        >
+
+                            <div class="comment__head">
+                                <strong class="comment-username">
+                                    {{ comment.user.username }}
+                                </strong>
+
+                                <span class="comment-date">
+                                    {{ comment.created_at|date:"d.m.Y H:i" }}
+                                </span>
+                            </div>
+
+                            <div class="comment-content">
+                                {{ comment.content|linebreaks }}
+                            </div>
+
+                            {% if user.is_authenticated and comment.user == user %}
+
+                                <div class="comment-actions">
+                                    <button type="button" class="edit-comment-button">
+                                        Редактировать
+                                    </button>
+
+                                    <button type="button" class="delete-comment-button">
+                                        Удалить
+                                    </button>
+                                </div>
+
+                                <div class="comment-edit" hidden>
+                                    <textarea rows="4">{{ comment.content }}</textarea>
+
+                                    <button type="button" class="save-comment-button">
+                                        Сохранить
+                                    </button>
+
+                                    <button type="button" class="cancel-comment-button">
+                                        Отмена
+                                    </button>
+                                </div>
+
+                            {% endif %}
+
+                        </div>
+
+                    {% empty %}
+
+                        <p id="no-comments-message" class="login-hint">
+                            Комментариев пока нет. Будьте первым.
+                        </p>
+
+                    {% endfor %}
+
+                </div>
+
+            </section>
 
         </div>
 
-        <hr>
-
-    {% empty %}
-
-        <p id="no-comments-message">
-            Комментариев пока нет.
-        </p>
-
-    {% endfor %}
+    </article>
 
 </div>
-
 
 <script src="{% static 'js/article_detail.js' %}"></script>
 

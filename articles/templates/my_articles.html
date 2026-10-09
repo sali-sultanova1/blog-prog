@@ -4,88 +4,99 @@
 
 {% block content %}
 
-<h1>Мои статьи</h1>
+<div class="page-heading">
 
-<p>
-    <a href="{% url 'create_article' %}">
-        Создать статью
+    <div>
+        <p class="eyebrow">Author workspace</p>
+        <h1 class="page-title">Мои статьи</h1>
+        <p class="page-intro">
+            Управляйте черновиками, публикациями и материалами на модерации.
+        </p>
+    </div>
+
+    <a class="button button--primary" href="{% url 'create_article' %}">
+        + Новая статья
     </a>
-</p>
 
-<hr>
+</div>
 
-{% for article in articles %}
+<div class="list-stack">
 
-    <article>
+    {% for article in articles %}
 
-        <h2>
-            {{ article.title }}
-        </h2>
+        <article class="list-card">
 
-        <p>
-            <strong>Статус:</strong>
-            {{ article.get_status_display }}
-        </p>
+            <div>
 
-        <p>
-            Создано:
-            {{ article.created_at|date:"d.m.Y H:i" }}
-        </p>
+                <span class="status-chip">
+                    {{ article.get_status_display }}
+                </span>
 
-        {% if article.summary %}
-            <p>
-                {{ article.summary }}
-            </p>
-        {% endif %}
+                <h2 class="list-card__title">
+                    {{ article.title }}
+                </h2>
 
-        {% if article.status == "published" %}
-            <p>
-                <a href="{% url 'article_detail' article.slug %}">
-                    Посмотреть опубликованную статью
-                </a>
-            </p>
-        {% endif %}
+                <p class="list-card__meta">
+                    Создано {{ article.created_at|date:"d.m.Y H:i" }}
+                </p>
 
-        {% if article.status == "draft" or article.status == "rejected" %}
+                {% if article.summary %}
+                    <p class="list-card__summary">
+                        {{ article.summary }}
+                    </p>
+                {% endif %}
 
-            <p>
-                <a href="{% url 'edit_article' article.pk %}">
-                    Редактировать
-                </a>
-            </p>
+            </div>
 
-            <form
-                method="post"
-                action="{% url 'submit_article' article.pk %}"
-            >
-                {% csrf_token %}
+            <div class="list-actions">
 
-                <button type="submit">
-                    Отправить на модерацию
-                </button>
-            </form>
+                {% if article.status == "published" %}
+                    <a href="{% url 'article_detail' article.slug %}">
+                        Открыть
+                    </a>
+                {% endif %}
 
-        {% endif %}
+                {% if article.status == "draft" or article.status == "rejected" %}
 
-        <form
-            method="post"
-            action="{% url 'delete_article' article.pk %}"
-        >
-            {% csrf_token %}
+                    <a href="{% url 'edit_article' article.pk %}">
+                        Редактировать
+                    </a>
 
-            <button type="submit">
-                Удалить статью
-            </button>
-        </form>
+                    <form
+                        method="post"
+                        action="{% url 'submit_article' article.pk %}"
+                    >
+                        {% csrf_token %}
+                        <button type="submit">
+                            На модерацию
+                        </button>
+                    </form>
 
-    </article>
+                {% endif %}
 
-{% empty %}
+                <form
+                    method="post"
+                    action="{% url 'delete_article' article.pk %}"
+                >
+                    {% csrf_token %}
+                    <button class="button--danger" type="submit">
+                        Удалить
+                    </button>
+                </form>
 
-    <p>
-        У вас пока нет статей.
-    </p>
+            </div>
 
-{% endfor %}
+        </article>
+
+    {% empty %}
+
+        <div class="empty-state">
+            <h2>У вас пока нет статей</h2>
+            <p>Создайте первый материал и сохраните его как черновик.</p>
+        </div>
+
+    {% endfor %}
+
+</div>
 
 {% endblock %}

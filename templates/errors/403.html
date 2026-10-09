@@ -1,21 +1,23 @@
 {% extends "base.html" %}
 
-{% block title %}
-Ошибка 403
-{% endblock %}
+{% block title %}Доступ запрещён{% endblock %}
 
 {% block content %}
 
-<h1>403 — Доступ запрещён</h1>
+<section class="error-page">
 
-<p>
-    У вас нет прав для выполнения этого действия.
-</p>
+    <span class="error-code">403</span>
 
-<p>
-    <a href="{% url 'article_list' %}">
-        Вернуться к статьям
-    </a>
-</p>
+    <h1>Доступ запрещён</h1>
+
+    <p>У вас нет прав для выполнения этого действия.</p>
+
+    <p>
+        <a class="button button--primary" href="{% url 'article_list' %}">
+            Вернуться к статьям
+        </a>
+    </p>
+
+</section>
 
 {% endblock %}

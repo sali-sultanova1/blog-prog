@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Ошибка сервера{% endblock %}
+
+{% block content %}
+
+<section class="error-page">
+
+    <span class="error-code">500</span>
+
+    <h1>Ошибка сервера</h1>
+
+    <p>Произошла непредвиденная ошибка. Попробуйте повторить запрос позже.</p>
+
+    <p>
+        <a class="button button--primary" href="{% url 'article_list' %}">
+            Вернуться к статьям
+        </a>
+    </p>
+
+</section>
+
+{% endblock %}

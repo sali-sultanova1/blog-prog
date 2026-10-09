@@ -1,45 +1,114 @@
 {% extends "base.html" %}
 
-{% block title %}Очередь модерации{% endblock %}
+{% block title %}Модерация статьи{% endblock %}
 
 {% block content %}
 
-<h1>Очередь модерации</h1>
+<div class="article-shell">
 
-{% for article in articles %}
+    <a class="article-back" href="{% url 'moderation_queue' %}">
+        ← К очереди модерации
+    </a>
 
-    <article>
+    <article class="article-frame">
 
-        <h2>
-            {{ article.title }}
-        </h2>
+        {% if article.cover_image %}
+            <div class="article-cover-wrap">
+                <img
+                    class="article-cover"
+                    src="{{ article.cover_image.url }}"
+                    alt="{{ article.title }}"
+                >
+            </div>
+        {% endif %}
 
-        <p>
-            Автор:
-            {{ article.author.username }}
-        </p>
+        <div class="article-body">
 
-        <p>
-            Отправлена:
-            {{ article.submitted_at|date:"d.m.Y H:i" }}
-        </p>
+            <header class="article-header">
 
-        <p>
-            {{ article.summary }}
-        </p>
+                <p class="eyebrow">Moderation review</p>
 
-        <a href="{% url 'moderate_article' article.pk %}">
-            Проверить статью
-        </a>
+                <h1 class="article-title">
+                    {{ article.title }}
+                </h1>
+
+                {% if article.summary %}
+                    <p class="article-deck">
+                        {{ article.summary }}
+                    </p>
+                {% endif %}
+
+                <div class="article-byline">
+                    <span class="author-inline">
+                        {% if article.author.avatar %}
+                            <img
+                                class="author-inline__avatar"
+                                src="{{ article.author.avatar.url }}"
+                                alt=""
+                            >
+                        {% else %}
+                            <span class="author-inline__avatar author-inline__fallback">
+                                {{ article.author.username|first|upper }}
+                            </span>
+                        {% endif %}
+
+                        {{ article.author.username }}
+                    </span>
+
+                    {% if article.submitted_at %}
+                        <span>
+                            Отправлено {{ article.submitted_at|date:"d.m.Y H:i" }}
+                        </span>
+                    {% endif %}
+                </div>
+
+            </header>
+
+            <div class="article-taxonomy">
+                {% for category in article.categories.all %}
+                    <span class="category-chip">
+                        {{ category.name }}
+                    </span>
+                {% endfor %}
+
+                {% for tag in article.tags.all %}
+                    <span class="tag-chip">
+                        #{{ tag.name }}
+                    </span>
+                {% endfor %}
+            </div>
+
+            <div class="article-content">
+                {{ article.content|linebreaks }}
+            </div>
+
+            <section class="moderation-panel">
+
+                <p class="eyebrow">Editorial decision</p>
+
+                <h2 class="moderation-panel__title">
+                    Решение модератора
+                </h2>
+
+                <p class="moderation-panel__intro">
+                    Проверьте материал и выберите итоговый статус. При отклонении можно оставить комментарий автору.
+                </p>
+
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+
+                    <button type="submit">
+                        Сохранить решение
+                    </button>
+                </form>
+
+            </section>
+
+        </div>
 
     </article>
 
-{% empty %}
-
-    <p>
-        Статей на модерации нет.
-    </p>
-
-{% endfor %}
+</div>
 
 {% endblock %}
