@@ -1,12 +1,9 @@
-from django.shortcuts import render, redirect
-from .forms import RegisterForm, ProfileForm
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect, get_object_or_404
-from .forms import RegisterForm, ProfileForm
-from .models import AuthorProfile
-from articles.models import Article
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
+from django.shortcuts import get_object_or_404, redirect, render
+from articles.models import Article
+from .forms import ProfileForm, RegisterForm
+from .models import AuthorProfile
 
 def register_view(request):
     if request.method == 'POST':
