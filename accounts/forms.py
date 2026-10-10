@@ -31,9 +31,8 @@ class UsernameOrEmailLoginForm(AuthenticationForm):
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = CustomUser
-        fields = ['email', 'first_name', 'last_name', 'bio', 'avatar']
+        fields = ['first_name', 'last_name', 'bio', 'avatar']
         widgets = {
-            'email': forms.EmailInput(attrs={'placeholder': 'name@example.com'}),
             'first_name': forms.TextInput(attrs={'placeholder': 'Имя'}),
             'last_name': forms.TextInput(attrs={'placeholder': 'Фамилия'}),
             'bio': forms.Textarea(attrs={'placeholder': 'Расскажите немного о себе…', 'rows': 5}),

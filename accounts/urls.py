@@ -5,7 +5,7 @@ from .forms import UsernameOrEmailLoginForm
 
 urlpatterns = [
     path('register/', register_view, name="register"),
-    path("verify-email/<uidb64>/<token>/", verify_email_view, name="verify_email"),
+    path("verify-email/<str:token>/", verify_email_view, name="verify_email"),
     path('login/', LoginView.as_view(template_name="login.html", authentication_form=UsernameOrEmailLoginForm), name="login"),
     path('logout/', LogoutView.as_view(), name="logout"),
     path("profile/", profile_view, name="profile"),

@@ -1,36 +1,39 @@
+import secrets
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.hashers import make_password
+from django.core.cache import cache
 from django.core.mail import send_mail
+from django.db import IntegrityError, transaction
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from articles.models import Article
 from .forms import ProfileForm, RegisterForm
 from .models import AuthorProfile, CustomUser
-from .tokens import email_verification_token
+
+PENDING_REGISTRATION_TIMEOUT = 30 * 60
 
 def register_view(request):
     if request.method == "POST":
         form = RegisterForm(request.POST)
+
         if form.is_valid():
-            user = form.save(commit=False)
-            user.is_active = False
-            user.save()
+            token = secrets.token_urlsafe(32)
+            cache_key = f"pending_registration:{token}"
+            pending_user = {"username": form.cleaned_data["username"], "email": form.cleaned_data["email"], "password_hash": make_password(form.cleaned_data["password1"])}
+
+            cache.set(cache_key, pending_user, timeout=PENDING_REGISTRATION_TIMEOUT)
 
             try:
-                send_verification_email(request, user)
+                send_verification_email(request, pending_user["username"], pending_user["email"], token)
             except Exception:
-                user.delete()
-                messages.error(
-                    request,
-                    "Не удалось отправить письмо. Попробуйте зарегистрироваться ещё раз.",
-                )
+                cache.delete(cache_key)
+                messages.error(request, "Не удалось отправить письмо. Попробуйте зарегистрироваться ещё раз.")
                 return render(request, "register.html", {"form": form}, status=503)
 
-            return render(request, "verification_sent.html", {"email": user.email},)
+            return render(request, "verification_sent.html", {"email": pending_user["email"]})
     else:
         form = RegisterForm()
 
@@ -70,43 +73,41 @@ def author_profile_view(request, username):
 
 
 
-def send_verification_email(request, user):
-    uid = urlsafe_base64_encode(force_bytes(user.pk))
-    token = email_verification_token.make_token(user)
-
-    verification_url = request.build_absolute_uri(
-        reverse(
-            "verify_email",
-            kwargs={"uidb64": uid, "token": token},
-        )
-    )
+def send_verification_email(request, username, email, token):
+    verification_url = request.build_absolute_uri(reverse("verify_email", kwargs={"token": token}))
 
     send_mail(
         subject="Подтверждение email — News Blog",
-        message=(
-            f"Здравствуйте, {user.username}!\n\n"
-            "Для завершения регистрации подтвердите адрес электронной почты:\n\n"
-            f"{verification_url}\n\n"
-            "Если вы не регистрировались на News Blog, просто проигнорируйте это письмо."
-        ),
+        message=f"Здравствуйте, {username}!\n\nДля завершения регистрации подтвердите адрес электронной почты:\n\n{verification_url}\n\nСсылка действительна 30 минут.\n\nЕсли вы не регистрировались на News Blog, просто проигнорируйте это письмо.",
         from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[user.email],
+        recipient_list=[email],
         fail_silently=False,
     )
 
 
-def verify_email_view(request, uidb64, token):
+def verify_email_view(request, token):
+    cache_key = f"pending_registration:{token}"
+    pending_user = cache.get(cache_key)
+
+    if pending_user is None:
+        return render(request, "verification_invalid.html", status=400)
+
+    if CustomUser.objects.filter(username=pending_user["username"]).exists():
+        cache.delete(cache_key)
+        return render(request, "verification_invalid.html", status=400)
+
+    if CustomUser.objects.filter(email__iexact=pending_user["email"]).exists():
+        cache.delete(cache_key)
+        return render(request, "verification_invalid.html", status=400)
+
     try:
-        user_id = force_str(urlsafe_base64_decode(uidb64))
-        user = CustomUser.objects.get(pk=user_id)
-    except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
-        user = None
+        with transaction.atomic():
+            user = CustomUser(username=pending_user["username"], email=pending_user["email"], password=pending_user["password_hash"])
+            user.save()
+    except IntegrityError:
+        cache.delete(cache_key)
+        return render(request, "verification_invalid.html", status=400)
 
-    if user is not None and email_verification_token.check_token(user, token):
-        user.is_active = True
-        user.save(update_fields=["is_active"])
-
-        messages.success(request, "Email подтверждён. Теперь вы можете войти.")
-        return redirect("login")
-
-    return render(request, "verification_invalid.html", status=400)
+    cache.delete(cache_key)
+    messages.success(request, "Email подтверждён. Аккаунт создан — теперь вы можете войти.")
+    return redirect("login")
