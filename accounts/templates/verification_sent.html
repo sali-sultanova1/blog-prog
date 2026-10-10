@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Подтвердите email{% endblock %}
+
+{% block content %}
+
+<section class="editor-layout">
+    <div class="editor-card">
+
+        <p class="eyebrow">Email verification</p>
+
+        <h1 class="editor-card__title">
+            Проверьте почту
+        </h1>
+
+        <p class="editor-card__intro">
+            Мы отправили ссылку для подтверждения на {{ email }}.
+            Перейдите по ней, чтобы активировать аккаунт.
+        </p>
+
+        <div class="editor-back">
+            <a href="{% url 'login' %}">
+                Перейти ко входу
+            </a>
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}

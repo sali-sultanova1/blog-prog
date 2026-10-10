@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Ссылка недействительна{% endblock %}
+
+{% block content %}
+
+<section class="error-page">
+
+    <span class="error-code">!</span>
+
+    <h1>Ссылка недействительна</h1>
+
+    <p>
+        Ссылка для подтверждения email неверна или больше не действует.
+    </p>
+
+    <a class="button button--primary" href="{% url 'register' %}">
+        Вернуться к регистрации
+    </a>
+
+</section>
+
+{% endblock %}
