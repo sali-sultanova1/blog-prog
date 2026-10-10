@@ -8,12 +8,12 @@ class UsernameOrEmailBackend(ModelBackend):
         if username is None or password is None:
             return None
 
-        user = User.objects.filter(email__iexact=username).first()
+        identifier = username.strip()
+        lookup = {"email__iexact": identifier} if "@" in identifier else {"username": identifier}
 
-        if user is None:
-            user = User.objects.filter(username=username).first()
-
-        if user is None:
+        try:
+            user = User.objects.get(**lookup)
+        except (User.DoesNotExist, User.MultipleObjectsReturned):
             User().set_password(password)
             return None
 

@@ -1,84 +1,83 @@
 {% extends "base.html" %}
 
-{% block title %}Модерация статьи{% endblock %}
+{% block title %}Проверка: {{ article.title }}{% endblock %}
 
 {% block content %}
+<a class="article-back" href="{% url 'moderation_queue' %}">
+    ← Очередь модерации
+</a>
 
-<div class="article-shell">
+<div class="review-layout">
+    <article class="review-document">
+        <header class="article-header">
+            <p class="eyebrow">Проверка материала</p>
 
-    <a class="article-back" href="{% url 'moderation_queue' %}">
-        ← К очереди
-    </a>
+            <h1 class="article-title">{{ article.title }}</h1>
 
-    <header class="article-header">
+            {% if article.summary %}
+                <p class="article-deck">{{ article.summary }}</p>
+            {% endif %}
 
-        <p class="eyebrow">Moderation review</p>
+            <div class="article-byline">
+                <span class="author-inline">
+                    {% if article.author.avatar %}
+                        <img class="author-inline__avatar"
+                             src="{{ article.author.avatar.url }}" alt="">
+                    {% else %}
+                        <span class="author-inline__avatar author-inline__fallback">
+                            {{ article.author.username|first|upper }}
+                        </span>
+                    {% endif %}
+                    {{ article.author.username }}
+                </span>
 
-        <h1 class="article-title">
-            {{ article.title }}
-        </h1>
+                {% if article.submitted_at %}
+                    <span>{{ article.submitted_at|date:"d.m.Y H:i" }}</span>
+                {% endif %}
+            </div>
+        </header>
 
-        <p class="article-deck">
-            {{ article.summary }}
+        <div class="article-taxonomy">
+            {% for category in article.categories.all %}
+                <span class="category-chip">{{ category.name }}</span>
+            {% endfor %}
+
+            {% for tag in article.tags.all %}
+                <span class="tag-chip">#{{ tag.name }}</span>
+            {% endfor %}
+        </div>
+
+        {% if article.cover_image %}
+            <div class="article-cover-wrap">
+                <img class="article-cover"
+                     src="{{ article.cover_image.url }}"
+                     alt="Обложка статьи «{{ article.title }}»">
+            </div>
+        {% endif %}
+
+        <div class="article-content">
+            {{ article.content|linebreaks }}
+        </div>
+    </article>
+
+    <aside class="moderation-panel" aria-labelledby="decision-title">
+        <p class="eyebrow">Решение редакции</p>
+        <h2 class="moderation-panel__title" id="decision-title">
+            Готово к публикации?
+        </h2>
+
+        <p class="moderation-panel__intro">
+            Проверьте содержание, заголовок и обложку.
+            Опубликованный материал станет доступен читателям.
         </p>
 
-        <div class="article-byline">
-            <span>Автор: {{ article.author.username }}</span>
-        </div>
+        <form method="post"
+              data-confirm="Сохранить решение по этой статье? При выборе публикации материал станет доступен читателям.">
+            {% csrf_token %}
+            {% include "includes/form_fields.html" %}
 
-    </header>
-
-    {% if article.cover_image %}
-        <img
-            class="article-cover"
-            src="{{ article.cover_image.url }}"
-            alt="{{ article.title }}"
-        >
-    {% endif %}
-
-    <div class="article-taxonomy">
-
-        {% for category in article.categories.all %}
-            <span class="category-chip">
-                {{ category.name }}
-            </span>
-        {% endfor %}
-
-        {% for tag in article.tags.all %}
-            <span class="tag-chip">
-                #{{ tag.name }}
-            </span>
-        {% endfor %}
-
-    </div>
-
-    <div class="article-content">
-        {{ article.content|linebreaks }}
-    </div>
-
-    <section class="editor-layout" style="margin-top: 46px;">
-
-        <div class="editor-card">
-
-            <p class="eyebrow">Decision</p>
-
-            <h2 class="editor-card__title">
-                Решение модератора
-            </h2>
-
-            <form method="post">
-                {% csrf_token %}
-                {{ form.as_p }}
-
-                <button type="submit">
-                    Сохранить решение
-                </button>
-            </form>
-
-        </div>
-
-    </section>
-
+            <button type="submit">Сохранить решение</button>
+        </form>
+    </aside>
 </div>
-
 {% endblock %}

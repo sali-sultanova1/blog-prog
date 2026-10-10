@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import create_article_view, my_articles_view, edit_my_article_view, submit_article_view, moderate_article_view, moderation_queue_view, become_author_view, delete_article_view, article_list_view, article_detail_view
+from django.views.generic import RedirectView
 
 urlpatterns = [
     path("create/", create_article_view, name="create_article"),
@@ -13,6 +14,7 @@ urlpatterns = [
     path("", article_list_view, name="article_list"),
 
     
-    path("<slug:slug>/", article_detail_view, name="article_detail"),
+    path("read/<slug:slug>/", article_detail_view, name="article_detail"),
+    path("<slug:slug>/", RedirectView.as_view(pattern_name="article_detail", permanent=True)),
 
 ]

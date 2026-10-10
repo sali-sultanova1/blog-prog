@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Article, Category, Tag
-
+from core.validators import validate_uploaded_image
 
 class ArticleSerializer(serializers.ModelSerializer):
     author = serializers.CharField(source="author.username", read_only=True)
@@ -8,7 +8,8 @@ class ArticleSerializer(serializers.ModelSerializer):
     tag_names = serializers.SlugRelatedField(source="tags", many=True, read_only=True, slug_field="name")
     likes_count = serializers.SerializerMethodField()
     comments_count = serializers.SerializerMethodField()
-
+    cover_image = serializers.ImageField(required=False, validators=[validate_uploaded_image])
+    
     class Meta:
         model = Article
         fields = ["id", "author", "categories", "category_names", "tags", "tag_names", "title", "slug", "summary", "content", "cover_image", "status", "likes_count", "comments_count", "created_at", "updated_at", "submitted_at", "published_at"]

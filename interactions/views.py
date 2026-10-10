@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from articles.models import Article
 from .forms import CommentForm
 from .models import Comment, Like, Bookmark
+from core.pagination import render_paginated
 
 # @login_required
 # def add_comment_view(request, slug):
@@ -82,6 +83,6 @@ from .models import Comment, Like, Bookmark
 
 @login_required
 def my_bookmarks_view(request):
-    bookmarks = Bookmark.objects.filter(user=request.user).select_related("article", "article__author").order_by("-created_at")
-    return render(request, "my_bookmarks.html", {"bookmarks": bookmarks})
+    bookmarks = Bookmark.objects.filter(user=request.user, article__status=Article.Status.PUBLISHED).select_related("article", "article__author").order_by("-created_at", "-pk")
+    return render_paginated(request, "my_bookmarks.html", bookmarks, name="bookmarks")
 

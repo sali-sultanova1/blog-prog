@@ -22,48 +22,74 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let currentPage = 1;
     let searchTimer = null;
+    let activeController = null;
+    let requestVersion = 0;
+
+    searchStatus.setAttribute("role", "status");
+    searchStatus.setAttribute("aria-live", "polite");
 
     async function loadArticles(page = 1) {
-        currentPage = page;
+        clearTimeout(searchTimer);
+
+        activeController?.abort();
+        const controller = new AbortController();
+        activeController = controller;
+
+        const version = ++requestVersion;
+        const requestedPage = page;
 
         const url = new URL(apiUrl, window.location.origin);
         const query = searchInput.value.trim();
         const category = categorySelect.value;
         const tag = tagSelect.value;
 
-        if (query) {
-            url.searchParams.set("search", query);
-        }
+        if (query) url.searchParams.set("search", query);
+        if (category) url.searchParams.set("category", category);
+        if (tag) url.searchParams.set("tag", tag);
 
-        if (category) {
-            url.searchParams.set("category", category);
-        }
+        url.searchParams.set("page", requestedPage);
 
-        if (tag) {
-            url.searchParams.set("tag", tag);
-        }
-
-        url.searchParams.set("page", currentPage);
-
-        searchStatus.textContent = "Загрузка…";
+        searchStatus.textContent = "Загрузка публикаций…";
+        resultsContainer.setAttribute("aria-busy", "true");
+        previousButton.disabled = true;
+        nextButton.disabled = true;
 
         try {
-            const response = await fetch(url);
+            const response = await fetch(url, {
+                signal: controller.signal,
+                headers: { "Accept": "application/json" },
+            });
 
-            if (!response.ok) {
-                throw new Error("Articles request failed");
-            }
+            if (!response.ok) throw new Error("Request failed");
 
             const data = await response.json();
 
+            if (!Array.isArray(data.results)) {
+                throw new Error("Invalid response");
+            }
+
+            if (version !== requestVersion) return;
+
+            currentPage = requestedPage;
+
             renderArticles(data.results);
             renderPagination(data);
+            document.querySelector("[data-server-pagination]")?.setAttribute("hidden", "");
 
             searchStatus.textContent = `Найдено: ${data.count}`;
 
             updateBrowserUrl(query, category, tag);
         } catch (error) {
-            searchStatus.textContent = "Не удалось загрузить статьи.";
+            if (error.name === "AbortError" || version !== requestVersion) return;
+
+            searchStatus.textContent =
+                "Не удалось обновить публикации. Показаны предыдущие результаты. Нажмите «Найти», чтобы повторить.";
+
+            pagination.hidden = true;
+        } finally {
+            if (version === requestVersion) {
+                resultsContainer.removeAttribute("aria-busy");
+            }
         }
     }
 
@@ -241,6 +267,10 @@ document.addEventListener("DOMContentLoaded", () => {
             url.searchParams.set("tag", tag);
         }
 
+        if (currentPage > 1) {
+            url.searchParams.set("page", currentPage);
+        }
+
         window.history.replaceState({}, "", url);
     }
 
@@ -285,5 +315,6 @@ document.addEventListener("DOMContentLoaded", () => {
         loadArticles(currentPage + 1);
     });
 
-    loadArticles();
+    const initialPage = Number(new URLSearchParams(window.location.search).get("page"));
+    loadArticles(Number.isInteger(initialPage) && initialPage > 0 ? initialPage : 1);
 });

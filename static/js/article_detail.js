@@ -1,269 +1,301 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const csrfInput = document.querySelector("[name=csrfmiddlewaretoken]");
-    const csrfToken = csrfInput?.value;
+    "use strict";
+
+    const csrfToken = document.querySelector(
+        "[name=csrfmiddlewaretoken]"
+    )?.value;
+
+    const comments = document.getElementById("comments");
+    const commentForm = document.getElementById("comment-form");
+
+    function notify(message) {
+        if (window.NewsUI) {
+            window.NewsUI.notify(message);
+        } else {
+            window.alert(message);
+        }
+    }
+
+    async function request(url, method, body) {
+        const headers = {
+            "Accept": "application/json",
+            "X-CSRFToken": csrfToken || "",
+        };
+
+        if (body !== undefined) headers["Content-Type"] = "application/json";
+
+        const response = await fetch(url, {
+            method,
+            headers,
+            credentials: "same-origin",
+            body: body === undefined ? undefined : JSON.stringify(body),
+        });
+
+        if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+                throw new Error("Не удалось выполнить действие. Проверьте, что вы вошли в аккаунт, и обновите страницу.");
+            }
+
+            if (response.status === 400) {
+                throw new Error("Проверьте введённые данные и попробуйте ещё раз.");
+            }
+
+            throw new Error("Не удалось сохранить изменения. Попробуйте ещё раз.");
+        }
+
+        if (response.status === 204) return null;
+        return response.json();
+    }
+
+    async function run(button, action) {
+        if (button.disabled) return;
+
+        button.disabled = true;
+        button.setAttribute("aria-busy", "true");
+
+        try {
+            await action();
+        } catch (error) {
+            notify(error instanceof TypeError
+                ? "Нет связи с сервером. Проверьте интернет и повторите действие."
+                : error.message);
+        } finally {
+            button.disabled = false;
+            button.removeAttribute("aria-busy");
+        }
+    }
 
     const likeButton = document.getElementById("like-button");
     const bookmarkButton = document.getElementById("bookmark-button");
-    const likesCount = document.getElementById("likes-count");
 
-    if (likeButton && csrfToken) {
-        likeButton.addEventListener("click", async () => {
-            const response = await fetch(likeButton.dataset.url, {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": csrfToken,
-                },
-            });
+    [likeButton, bookmarkButton].forEach((button) => {
+        if (button) {
+            button.setAttribute(
+                "aria-pressed",
+                String(button.classList.contains("is-active"))
+            );
+        }
+    });
 
-            if (!response.ok) {
-                return;
-            }
-
-            const data = await response.json();
+    likeButton?.addEventListener("click", () => {
+        run(likeButton, async () => {
+            const data = await request(likeButton.dataset.url, "POST");
 
             likeButton.classList.toggle("is-active", data.liked);
-            likesCount.textContent = data.likes_count;
+            likeButton.setAttribute("aria-pressed", String(data.liked));
+            document.getElementById("likes-count").textContent = data.likes_count;
         });
-    }
+    });
 
-    if (bookmarkButton && csrfToken) {
-        bookmarkButton.addEventListener("click", async () => {
-            const response = await fetch(bookmarkButton.dataset.url, {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": csrfToken,
-                },
-            });
+    bookmarkButton?.addEventListener("click", () => {
+        run(bookmarkButton, async () => {
+            const data = await request(bookmarkButton.dataset.url, "POST");
 
-            if (!response.ok) {
-                return;
-            }
+            bookmarkButton.classList.toggle("is-active", data.bookmarked);
+            bookmarkButton.setAttribute("aria-pressed", String(data.bookmarked));
+            bookmarkButton.querySelector("span").textContent =
+                data.bookmarked ? "Сохранено" : "Сохранить";
 
-            const data = await response.json();
-
-            bookmarkButton.classList.toggle(
-                "is-active",
-                data.bookmarked
-            );
-
-            const label = bookmarkButton.querySelector("span");
-
-            if (label) {
-                label.textContent = data.bookmarked
-                    ? "Сохранено"
-                    : "Сохранить";
-            }
+            notify(data.bookmarked
+                ? "Статья добавлена в закладки."
+                : "Статья удалена из закладок.");
         });
-    }
+    });
 
-    const commentForm = document.getElementById("comment-form");
-    const commentsContainer = document.getElementById("comments");
+    function updateEmptyState() {
+        if (!comments) return;
 
-    if (commentForm && commentsContainer && csrfToken) {
-        commentForm.addEventListener("submit", async (event) => {
-            event.preventDefault();
+        const empty = document.getElementById("no-comments-message");
+        const hasComments = Boolean(comments.querySelector(".comment"));
 
-            const textarea = document.getElementById("comment-content");
-            const content = textarea.value.trim();
-
-            if (!content) {
-                return;
-            }
-
-            const response = await fetch(commentForm.dataset.url, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrfToken,
-                },
-                body: JSON.stringify({
-                    article: Number(commentForm.dataset.articleId),
-                    content,
-                }),
-            });
-
-            if (!response.ok) {
-                return;
-            }
-
-            const comment = await response.json();
-
-            const noCommentsMessage = document.getElementById(
-                "no-comments-message"
-            );
-
-            if (noCommentsMessage) {
-                noCommentsMessage.remove();
-            }
-
-            commentsContainer.prepend(
-                createCommentElement(comment)
-            );
-
-            textarea.value = "";
-        });
-    }
-
-    if (commentsContainer && csrfToken) {
-        commentsContainer.addEventListener("click", async (event) => {
-            const commentElement = event.target.closest(".comment");
-
-            if (!commentElement) {
-                return;
-            }
-
-            const editBlock = commentElement.querySelector(".comment-edit");
-
-            if (event.target.classList.contains("edit-comment-button")) {
-                setCommentEditing(commentElement, true);
-            }
-
-            if (event.target.classList.contains("cancel-comment-button")) {
-                setCommentEditing(commentElement, false);
-            }
-
-            if (event.target.classList.contains("save-comment-button")) {
-                const textarea = editBlock.querySelector("textarea");
-                const content = textarea.value.trim();
-
-                if (!content) {
-                    return;
-                }
-
-                const response = await fetch(commentElement.dataset.url, {
-                    method: "PATCH",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRFToken": csrfToken,
-                    },
-                    body: JSON.stringify({
-                        content,
-                    }),
-                });
-
-                if (!response.ok) {
-                    return;
-                }
-
-                const comment = await response.json();
-
-                const contentElement = commentElement.querySelector(
-                    ".comment-content"
-                );
-
-                contentElement.textContent = comment.content;
-
-                setCommentEditing(commentElement, false);
-            }
-
-            if (event.target.classList.contains("delete-comment-button")) {
-                const response = await fetch(commentElement.dataset.url, {
-                    method: "DELETE",
-                    headers: {
-                        "X-CSRFToken": csrfToken,
-                    },
-                });
-
-                if (response.ok) {
-                    commentElement.remove();
-                }
-            }
-        });
-    }
-
-    function setCommentEditing(commentElement, editing) {
-        const content = commentElement.querySelector(".comment-content");
-        const actions = commentElement.querySelector(".comment-actions");
-        const editBlock = commentElement.querySelector(".comment-edit");
-
-        if (content) {
-            content.hidden = editing;
-        }
-
-        if (actions) {
-            actions.hidden = editing;
-        }
-
-        if (editBlock) {
-            editBlock.hidden = !editing;
-
-            if (editing) {
-                const textarea = editBlock.querySelector("textarea");
-
-                if (textarea) {
-                    textarea.focus();
-                    textarea.setSelectionRange(
-                        textarea.value.length,
-                        textarea.value.length
-                    );
-                }
-            }
+        if (hasComments) {
+            empty?.remove();
+        } else if (!empty) {
+            const message = document.createElement("p");
+            message.id = "no-comments-message";
+            message.className = "login-hint";
+            message.textContent = "Комментариев пока нет. Будьте первым.";
+            comments.append(message);
         }
     }
 
-    function createCommentElement(comment) {
+    function setEditing(element, editing) {
+        element.querySelector(".comment-content").hidden = editing;
+        element.querySelector(".comment-actions").hidden = editing;
+        element.querySelector(".comment-edit").hidden = !editing;
+
+        if (editing) {
+            element.querySelector(".comment-edit textarea").focus();
+        } else {
+            element.querySelector(".edit-comment-button")?.focus();
+        }
+    }
+
+    function makeButton(className, text) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = className;
+        button.textContent = text;
+        return button;
+    }
+
+    function createComment(data) {
         const element = document.createElement("div");
-
         element.className = "comment";
-        element.dataset.commentId = comment.id;
+        element.dataset.commentId = data.id;
         element.dataset.url =
-            `${commentsContainer.dataset.baseUrl}${comment.id}/`;
+            `${comments.dataset.baseUrl.replace(/\/?$/, "/")}${data.id}/`;
 
         const head = document.createElement("div");
         head.className = "comment__head";
 
         const username = document.createElement("strong");
         username.className = "comment-username";
-        username.textContent = comment.username;
+        username.textContent = data.username;
 
         const date = document.createElement("span");
         date.className = "comment-date";
-        date.textContent = comment.created_at
-            ? new Date(comment.created_at).toLocaleString("ru-RU")
+        date.textContent = data.created_at
+            ? new Date(data.created_at).toLocaleString("ru-RU")
             : "Только что";
 
         head.append(username, date);
 
         const content = document.createElement("div");
         content.className = "comment-content";
-        content.textContent = comment.content;
+        content.textContent = data.content;
 
-        const actions = document.createElement('div')
-        actions.className = 'comment-actions'
+        const actions = document.createElement("div");
+        actions.className = "comment-actions";
+        actions.append(
+            makeButton("edit-comment-button", "Редактировать"),
+            makeButton("delete-comment-button", "Удалить")
+        );
 
-        const editButton = document.createElement('button')
-        editButton.type = 'button'
-        editButton.className = 'edit-comment-button'
-        editButton.textContent = 'Редактировать'
-
-        const deleteButton = document.createElement('button')
-        deleteButton.type = 'button'
-        deleteButton.className = 'delete-comment-button'
-        deleteButton.textContent = 'Удалить'
-
-        actions.append(editButton, deleteButton)
-        
-        const editBlock = document.createElement("div");
-        editBlock.className = "comment-edit";
-        editBlock.hidden = true;
+        const editor = document.createElement("div");
+        editor.className = "comment-edit";
+        editor.hidden = true;
 
         const textarea = document.createElement("textarea");
-        textarea.value = comment.content;
+        textarea.rows = 4;
+        textarea.value = data.content;
+        textarea.dataset.savedValue = data.content;
+        textarea.setAttribute("aria-label", "Текст комментария");
 
-        const saveButton = document.createElement("button");
-        saveButton.type = "button";
-        saveButton.className = "save-comment-button";
-        saveButton.textContent = "Сохранить";
+        editor.append(
+            textarea,
+            makeButton("save-comment-button", "Сохранить"),
+            document.createTextNode(" "),
+            makeButton("cancel-comment-button", "Отмена")
+        );
 
-        const cancelButton = document.createElement("button");
-        cancelButton.type = "button";
-        cancelButton.className = "cancel-comment-button";
-        cancelButton.textContent = "Отмена";
-
-        editBlock.append(textarea, saveButton, cancelButton);
-
-        element.append(head, content, actions, editBlock);
-
+        element.append(head, content, actions, editor);
         return element;
     }
+
+    commentForm?.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        const textarea = document.getElementById("comment-content");
+        const content = textarea.value.trim();
+        const button = commentForm.querySelector("button[type='submit']");
+
+        if (!content) {
+            notify("Напишите комментарий перед отправкой.");
+            textarea.focus();
+            return;
+        }
+
+        run(button, async () => {
+            textarea.readOnly = true;
+
+            try {
+                const data = await request(commentForm.dataset.url, "POST", {
+                    article: Number(commentForm.dataset.articleId),
+                    content,
+                });
+
+                comments.prepend(createComment(data));
+                textarea.value = "";
+                updateEmptyState();
+                notify("Комментарий опубликован.");
+            } finally {
+                textarea.readOnly = false;
+            }
+        });
+    });
+
+    comments?.addEventListener("click", async (event) => {
+        const button = event.target.closest("button");
+        const element = button?.closest(".comment");
+
+        if (!button || !element) return;
+
+        const editor = element.querySelector(".comment-edit");
+        const textarea = editor?.querySelector("textarea");
+
+        if (button.classList.contains("edit-comment-button")) {
+            setEditing(element, true);
+            return;
+        }
+
+        if (button.classList.contains("cancel-comment-button")) {
+            textarea.value = textarea.dataset.savedValue ?? textarea.defaultValue;
+            setEditing(element, false);
+            return;
+        }
+
+        if (button.classList.contains("save-comment-button")) {
+            const content = textarea.value.trim();
+
+            if (!content) {
+                notify("Комментарий не может быть пустым.");
+                textarea.focus();
+                return;
+            }
+
+            const cancel = editor.querySelector(".cancel-comment-button");
+
+            await run(button, async () => {
+                textarea.readOnly = true;
+                cancel.disabled = true;
+
+                try {
+                    const data = await request(element.dataset.url, "PATCH", { content });
+
+                    element.querySelector(".comment-content").textContent = data.content;
+                    textarea.value = data.content;
+                    textarea.dataset.savedValue = data.content;
+                    setEditing(element, false);
+                    notify("Комментарий обновлён.");
+                } finally {
+                    textarea.readOnly = false;
+                    cancel.disabled = false;
+                }
+            });
+
+            return;
+        }
+
+        if (button.classList.contains("delete-comment-button")) {
+            const approved = window.NewsUI
+                ? await window.NewsUI.confirm("Удалить этот комментарий? Восстановить его не получится.")
+                : window.confirm("Удалить комментарий?");
+
+            if (!approved) return;
+
+            await run(button, async () => {
+                await request(element.dataset.url, "DELETE");
+                element.remove();
+                updateEmptyState();
+                document.getElementById("comment-content")?.focus();
+                notify("Комментарий удалён.");
+            });
+        }
+    });
+
+    comments?.querySelectorAll(".comment-edit textarea").forEach((textarea) => {
+        textarea.setAttribute("aria-label", "Текст комментария");
+        textarea.dataset.savedValue = textarea.value;
+    });
 });

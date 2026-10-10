@@ -9,6 +9,8 @@ from .models import Article, Category, Tag
 from .serializers import ArticleSerializer, CategorySerializer, TagSerializer
 from .api_permissions import ArticleAPIPermission, AdminWritePermission
 from .filters import ArticleFilter
+from django.db import transaction
+from django.shortcuts import get_object_or_404
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all().order_by("name")
@@ -85,3 +87,8 @@ class ArticleViewSet(viewsets.ModelViewSet):
             bookmarked = False
 
         return Response({"bookmarked": bookmarked})
+
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+        get_object_or_404(Article.objects.select_for_update(), pk=kwargs["pk"], author=request.user)
+        return super().update(request, *args, **kwargs)

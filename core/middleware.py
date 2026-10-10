@@ -12,13 +12,8 @@ class RequestLoggingMiddleware:
         response = self.get_response(request)
 
         duration = time.perf_counter() - start_time
+        log_path = "/verify-email/[redacted]/" if request.path.startswith("/verify-email/") else request.path
 
-        logger.info(
-            "%s %s -> %s (%.3fs)",
-            request.method,
-            request.path,
-            response.status_code,
-            duration,
-        )
+        logger.info("%s %s -> %s (%.3fs)", request.method, log_path, response.status_code, duration)
 
         return response

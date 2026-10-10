@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from core.validators import validate_uploaded_image
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name="Название")
@@ -33,7 +34,7 @@ class Article(models.Model):
     slug = models.SlugField(max_length=200, unique=True, verbose_name="slug")
     summary = models.TextField(verbose_name="Краткое содержание")
     content = models.TextField(verbose_name="Текст статьи")
-    cover_image = models.ImageField(verbose_name="Обложка", upload_to='articles/covers/', blank = True)
+    cover_image = models.ImageField(verbose_name="Обложка", upload_to="articles/covers/", blank=True, validators=[validate_uploaded_image])
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.DRAFT, verbose_name="Статус")
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")

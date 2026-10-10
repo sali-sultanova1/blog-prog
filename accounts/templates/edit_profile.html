@@ -15,12 +15,12 @@
         </h1>
 
         <p class="editor-card__intro">
-            Обновите имя, биографию, email или фотографию профиля.
+            Обновите имя, биографию или фотографию профиля.
         </p>
 
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
-            {{ form.as_p }}
+            {% include "includes/form_fields.html" %}
 
             <button type="submit">
                 Сохранить изменения

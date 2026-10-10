@@ -1,0 +1,13 @@
+{% if page_obj.has_other_pages %}
+    <nav aria-label="Страницы" data-server-pagination>
+        {% if page_obj.has_previous %}
+            <a href="{% querystring page=page_obj.previous_page_number %}">Назад</a>
+        {% endif %}
+
+        <span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+            <a href="{% querystring page=page_obj.next_page_number %}">Далее</a>
+        {% endif %}
+    </nav>
+{% endif %}

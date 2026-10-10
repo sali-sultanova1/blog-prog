@@ -17,6 +17,22 @@ class RegisterForm(UserCreationForm):
         self.fields['password1'].widget.attrs.update({'placeholder': 'Придумайте пароль'})
         self.fields['password2'].widget.attrs.update({'placeholder': 'Повторите пароль'})
 
+    def clean_username(self):
+        username = self.cleaned_data["username"]
+
+        if "@" in username:
+            raise forms.ValidationError("Имя пользователя не должно содержать @.")
+
+        return username
+    
+    def clean_email(self):
+        email = self.cleaned_data["email"].strip().lower()
+
+        if CustomUser.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError("Пользователь с таким email уже существует.")
+
+        return email
+
 class UsernameOrEmailLoginForm(AuthenticationForm):
     username = forms.CharField(
         label='Имя пользователя или email',

@@ -35,7 +35,7 @@
 
         <form method="post">
             {% csrf_token %}
-            {{ form.as_p }}
+            {% include "includes/form_fields.html" %}
 
             <button type="submit">
                 Создать аккаунт

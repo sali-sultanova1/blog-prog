@@ -1,114 +1,70 @@
 {% extends "base.html" %}
 
-{% block title %}Модерация статьи{% endblock %}
+{% block title %}Очередь модерации — News Blog{% endblock %}
 
 {% block content %}
+<section aria-labelledby="queue-title">
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">Редакция</p>
+            <h1 class="page-title" id="queue-title">Очередь модерации</h1>
+            <p class="page-intro">
+                Проверьте материалы перед публикацией.
+                Сначала показаны статьи, которые ожидают дольше остальных.
+            </p>
+        </div>
 
-<div class="article-shell">
+        <span class="queue-count">
+            Ожидают решения: <strong>{{ articles|length }}</strong>
+        </span>
+    </div>
 
-    <a class="article-back" href="{% url 'moderation_queue' %}">
-        ← К очереди модерации
-    </a>
-
-    <article class="article-frame">
-
-        {% if article.cover_image %}
-            <div class="article-cover-wrap">
-                <img
-                    class="article-cover"
-                    src="{{ article.cover_image.url }}"
-                    alt="{{ article.title }}"
-                >
-            </div>
-        {% endif %}
-
-        <div class="article-body">
-
-            <header class="article-header">
-
-                <p class="eyebrow">Moderation review</p>
-
-                <h1 class="article-title">
-                    {{ article.title }}
-                </h1>
-
-                {% if article.summary %}
-                    <p class="article-deck">
-                        {{ article.summary }}
-                    </p>
-                {% endif %}
-
-                <div class="article-byline">
-                    <span class="author-inline">
-                        {% if article.author.avatar %}
-                            <img
-                                class="author-inline__avatar"
-                                src="{{ article.author.avatar.url }}"
-                                alt=""
-                            >
-                        {% else %}
-                            <span class="author-inline__avatar author-inline__fallback">
-                                {{ article.author.username|first|upper }}
-                            </span>
-                        {% endif %}
-
-                        {{ article.author.username }}
+    <div class="list-stack">
+        {% for article in articles %}
+            <article class="list-card">
+                <div>
+                    <span class="status-chip status-chip--submitted">
+                        На модерации
                     </span>
 
-                    {% if article.submitted_at %}
-                        <span>
-                            Отправлено {{ article.submitted_at|date:"d.m.Y H:i" }}
-                        </span>
+                    <h2 class="list-card__title">
+                        <a href="{% url 'moderate_article' article.pk %}">
+                            {{ article.title }}
+                        </a>
+                    </h2>
+
+                    <p class="list-card__meta">
+                        {{ article.author.username }}
+                        {% if article.submitted_at %}
+                            · Отправлено {{ article.submitted_at|date:"d.m.Y H:i" }}
+                        {% endif %}
+                    </p>
+
+                    {% if article.summary %}
+                        <p class="list-card__summary">
+                            {{ article.summary|truncatechars:220 }}
+                        </p>
                     {% endif %}
                 </div>
 
-            </header>
-
-            <div class="article-taxonomy">
-                {% for category in article.categories.all %}
-                    <span class="category-chip">
-                        {{ category.name }}
-                    </span>
-                {% endfor %}
-
-                {% for tag in article.tags.all %}
-                    <span class="tag-chip">
-                        #{{ tag.name }}
-                    </span>
-                {% endfor %}
+                <div class="list-actions">
+                    <a href="{% url 'moderate_article' article.pk %}">
+                        Проверить статью →
+                    </a>
+                </div>
+            </article>
+        {% empty %}
+            <div class="empty-state">
+                <p class="eyebrow">Всё проверено</p>
+                <h2>В очереди пока нет статей</h2>
+                <p>Новые материалы появятся здесь, когда авторы отправят их на проверку.</p>
+                <a class="button button--secondary" href="{% url 'article_list' %}">
+                    К публикациям
+                </a>
             </div>
+        {% endfor %}
+    </div>
+</section>
 
-            <div class="article-content">
-                {{ article.content|linebreaks }}
-            </div>
-
-            <section class="moderation-panel">
-
-                <p class="eyebrow">Editorial decision</p>
-
-                <h2 class="moderation-panel__title">
-                    Решение модератора
-                </h2>
-
-                <p class="moderation-panel__intro">
-                    Проверьте материал и выберите итоговый статус. При отклонении можно оставить комментарий автору.
-                </p>
-
-                <form method="post">
-                    {% csrf_token %}
-                    {{ form.as_p }}
-
-                    <button type="submit">
-                        Сохранить решение
-                    </button>
-                </form>
-
-            </section>
-
-        </div>
-
-    </article>
-
-</div>
-
+{% include "includes/pagination.html" %}
 {% endblock %}

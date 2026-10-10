@@ -1,102 +1,90 @@
 {% extends "base.html" %}
 
-{% block title %}Мои статьи{% endblock %}
+{% block title %}Мои статьи — News Blog{% endblock %}
 
 {% block content %}
-
 <div class="page-heading">
-
     <div>
-        <p class="eyebrow">Author workspace</p>
+        <p class="eyebrow">Кабинет автора</p>
         <h1 class="page-title">Мои статьи</h1>
         <p class="page-intro">
-            Управляйте черновиками, публикациями и материалами на модерации.
+            От первой идеи до публикации. Здесь собраны ваши материалы и их статусы.
         </p>
     </div>
 
     <a class="button button--primary" href="{% url 'create_article' %}">
         + Новая статья
     </a>
-
 </div>
 
 <div class="list-stack">
-
     {% for article in articles %}
-
         <article class="list-card">
-
             <div>
-
-                <span class="status-chip">
+                <span class="status-chip status-chip--{{ article.status }}">
                     {{ article.get_status_display }}
                 </span>
 
-                <h2 class="list-card__title">
-                    {{ article.title }}
-                </h2>
+                <h2 class="list-card__title">{{ article.title }}</h2>
 
                 <p class="list-card__meta">
-                    Создано {{ article.created_at|date:"d.m.Y H:i" }}
+                    Обновлено {{ article.updated_at|date:"d.m.Y H:i" }}
                 </p>
 
                 {% if article.summary %}
                     <p class="list-card__summary">
-                        {{ article.summary }}
+                        {{ article.summary|truncatechars:200 }}
                     </p>
                 {% endif %}
-
             </div>
 
             <div class="list-actions">
-
                 {% if article.status == "published" %}
-                    <a href="{% url 'article_detail' article.slug %}">
-                        Открыть
-                    </a>
+                    <a href="{% url 'article_detail' article.slug %}">Читать →</a>
                 {% endif %}
 
                 {% if article.status == "draft" or article.status == "rejected" %}
+                    <a href="{% url 'edit_article' article.pk %}">Редактировать</a>
 
-                    <a href="{% url 'edit_article' article.pk %}">
-                        Редактировать
-                    </a>
-
-                    <form
-                        method="post"
-                        action="{% url 'submit_article' article.pk %}"
-                    >
+                    <form method="post"
+                          action="{% url 'submit_article' article.pk %}"
+                          data-confirm="Отправить статью на модерацию? До решения редактора её нельзя будет редактировать.">
                         {% csrf_token %}
-                        <button type="submit">
-                            На модерацию
-                        </button>
+                        <button type="submit">На модерацию</button>
                     </form>
-
                 {% endif %}
 
-                <form
-                    method="post"
-                    action="{% url 'delete_article' article.pk %}"
-                >
+                {% with review=article.review_history.0 %}
+                    {% if review %}
+                        <section>
+                            <p>Последнее решение: {{ review.get_decision_display }}</p>
+                            {% if review.comment %}
+                                <div>{{ review.comment|linebreaks }}</div>
+                            {% endif %}
+                            <small>{{ review.created_at|date:"d.m.Y H:i" }}</small>
+                        </section>
+                    {% endif %}
+                {% endwith %}
+
+                <form method="post"
+                      action="{% url 'delete_article' article.pk %}"
+                      data-confirm="Удалить статью «{{ article.title }}»? Восстановить её через сайт не получится.">
                     {% csrf_token %}
-                    <button class="button--danger" type="submit">
-                        Удалить
-                    </button>
+                    <button class="button--danger" type="submit">Удалить</button>
                 </form>
-
             </div>
-
         </article>
-
     {% empty %}
-
         <div class="empty-state">
-            <h2>У вас пока нет статей</h2>
-            <p>Создайте первый материал и сохраните его как черновик.</p>
+            <p class="eyebrow">Начните с идеи</p>
+            <h2>Ваша первая история ещё впереди</h2>
+            <p>Создайте черновик. Его можно спокойно доработать перед отправкой редактору.</p>
+
+            <a class="button button--primary" href="{% url 'create_article' %}">
+                Написать статью
+            </a>
         </div>
-
     {% endfor %}
-
 </div>
-
+{% include "includes/pagination.html" %}
 {% endblock %}
