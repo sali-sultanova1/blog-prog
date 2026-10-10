@@ -1,54 +1,250 @@
 {% extends "base.html" %}
 
-{% block title %}Статистика авторов{% endblock %}
+{% block title %}Статистика редакции — News Blog{% endblock %}
 
 {% block content %}
-<h1>Статистика авторов</h1>
+<section class="analytics-page" aria-labelledby="analytics-title">
 
-<p>
-    Учитываются только опубликованные статьи.
-    Длина — количество символов текста, включая пробелы.
-</p>
+    <header class="page-heading analytics-heading">
+        <div>
+            <p class="eyebrow">Редакция / Обзор</p>
 
-<table>
-    <thead>
-        <tr>
-            <th>Автор</th>
-            <th>Публикаций</th>
-            <th>Средняя длина</th>
-            <th>Теги</th>
-        </tr>
-    </thead>
+            <h1 class="page-title" id="analytics-title">
+                Статистика редакции
+            </h1>
 
-    <tbody>
-        {% for author in authors %}
-            <tr>
-                <td>
-                    {% if user.is_authenticated %}
-                        <a href="{% url 'author_profile' author.username %}">{{ author.username }}</a>
-                    {% else %}
-                        {{ author.username }}
-                    {% endif %}
-                </td>
+            <p class="page-intro">
+                Авторы, публикации и материалы в работе.
+                Данные за всё время.
+            </p>
+        </div>
 
-                <td>{{ author.published_count }}</td>
-                <td>{{ author.average_length|default_if_none:0|floatformat:0 }}</td>
+        <a class="button button--secondary"
+           href="{% url 'moderation_queue' %}">
+            Очередь модерации
+            <span class="analytics-counter">
+                {{ overview.submitted }}
+            </span>
+        </a>
+    </header>
 
-                <td>
-                    {% for tag in author.used_tags %}
-                        {{ tag }}{% if not forloop.last %}, {% endif %}
-                    {% empty %}
-                        нет
-                    {% endfor %}
-                </td>
-            </tr>
-        {% empty %}
-            <tr>
-                <td colspan="4">Пока нет авторов.</td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <dl class="analytics-metrics">
+        <div class="analytics-metric">
+            <dt>Авторов</dt>
+            <dd>{{ overview.authors }}</dd>
+            <p>Включая авторов без публикаций</p>
+        </div>
 
-{% include "includes/pagination.html" %}
+        <div class="analytics-metric">
+            <dt>Опубликовано</dt>
+            <dd>{{ overview.published }}</dd>
+            <p>Статей доступно читателям</p>
+        </div>
+
+        <div class="analytics-metric analytics-metric--accent">
+            <dt>На модерации</dt>
+            <dd>{{ overview.submitted }}</dd>
+            <p>
+                {% if overview.submitted %}
+                    Ожидают решения редакции
+                {% else %}
+                    Все присланные статьи проверены
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="analytics-metric">
+            <dt>Средняя длина</dt>
+            <dd>
+                {{ overview.average_length|default_if_none:0|floatformat:0 }}
+            </dd>
+            <p>Символов в опубликованной статье</p>
+        </div>
+    </dl>
+
+    <div class="analytics-layout">
+
+        <section class="analytics-card" aria-labelledby="authors-title">
+            <header class="analytics-card__header">
+                <div>
+                    <p class="eyebrow">Команда журнала</p>
+                    <h2 id="authors-title">Авторы и публикации</h2>
+                    <p>Сначала авторы с наибольшим числом публикаций.</p>
+                </div>
+
+                <span class="analytics-counter">
+                    {{ page_obj.paginator.count }}
+                </span>
+            </header>
+
+            {% if authors %}
+                <div class="analytics-table-scroll"
+                     role="region"
+                     aria-labelledby="authors-title"
+                     tabindex="0">
+
+                    <table class="analytics-table">
+                        <caption class="analytics-sr-only">
+                            Количество опубликованных статей,
+                            средняя длина текста и использованные теги
+                            по каждому автору.
+                        </caption>
+
+                        <thead>
+                            <tr>
+                                <th scope="col">Автор</th>
+                                <th scope="col" class="analytics-number">
+                                    Статей
+                                </th>
+                                <th scope="col" class="analytics-number">
+                                    Средняя длина
+                                </th>
+                                <th scope="col">Темы</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for author in authors %}
+                                <tr>
+                                    <th scope="row">
+                                        <a class="analytics-author"
+                                           href="{% url 'author_profile' author.username %}">
+
+                                            {% if author.avatar %}
+                                                <img
+                                                    class="analytics-avatar"
+                                                    src="{{ author.avatar.url }}"
+                                                    alt=""
+                                                    loading="lazy"
+                                                >
+                                            {% else %}
+                                                <span class="analytics-avatar analytics-avatar--fallback"
+                                                      aria-hidden="true">
+                                                    {{ author.username|first|upper }}
+                                                </span>
+                                            {% endif %}
+
+                                            <span class="analytics-author__text">
+                                                <strong>{{ author.username }}</strong>
+
+                                                {% if author.first_name or author.last_name %}
+                                                    <small>
+                                                        {{ author.first_name }}
+                                                        {{ author.last_name }}
+                                                    </small>
+                                                {% else %}
+                                                    <small>Автор журнала</small>
+                                                {% endif %}
+                                            </span>
+                                        </a>
+                                    </th>
+
+                                    <td class="analytics-number">
+                                        <strong>{{ author.published_count }}</strong>
+                                    </td>
+
+                                    <td class="analytics-number">
+                                        {% if author.published_count %}
+                                            {{ author.average_length|default_if_none:0|floatformat:0 }}
+                                            <span class="analytics-unit">симв.</span>
+                                        {% else %}
+                                            <span aria-label="Нет опубликованных статей">—</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        <div class="analytics-tags">
+                                            {% for tag in author.used_tags %}
+                                                <span>{{ tag }}</span>
+                                            {% empty %}
+                                                <span class="analytics-tags__empty">
+                                                    Без тегов
+                                                </span>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <footer class="analytics-card__footer">
+                    <span>
+                        {{ page_obj.start_index }}–{{ page_obj.end_index }}
+                        из {{ page_obj.paginator.count }} авторов
+                    </span>
+
+                    {% include "includes/pagination.html" %}
+                </footer>
+            {% else %}
+                <div class="analytics-empty">
+                    <span class="analytics-empty__mark" aria-hidden="true">N.</span>
+                    <h3>Здесь появятся авторы</h3>
+                    <p>
+                        Статистика начнёт заполняться, когда пользователи
+                        станут авторами или появятся публикации.
+                    </p>
+                </div>
+            {% endif %}
+        </section>
+
+        <aside class="analytics-sidebar">
+            <section class="analytics-card analytics-distribution"
+                     aria-labelledby="status-title">
+
+                <p class="eyebrow">Материалы</p>
+                <h2 id="status-title">По статусам</h2>
+
+                <p class="analytics-total">
+                    <strong>{{ overview.total }}</strong>
+                    <span>статей всего</span>
+                </p>
+
+                {% if overview.total %}
+                    <ul class="analytics-statuses">
+                        {% for item in status_rows %}
+                            <li>
+                                <div class="analytics-statuses__label">
+                                    <span>{{ item.label }}</span>
+                                    <strong>{{ item.count }}</strong>
+                                </div>
+
+                                <div class="analytics-track" aria-hidden="true">
+                                    <span
+                                        class="analytics-fill analytics-fill--{{ item.key }}"
+                                        style="width: {% widthratio item.count overview.total 100 %}%"
+                                    ></span>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="analytics-muted">
+                        Пока нет материалов. Здесь будет видно,
+                        сколько статей опубликовано и сколько ещё в работе.
+                    </p>
+                {% endif %}
+
+                <a class="analytics-text-link"
+                   href="{% url 'moderation_queue' %}">
+                    Перейти к проверке <span aria-hidden="true">↗</span>
+                </a>
+            </section>
+
+            <section class="analytics-note">
+                <h3>Как считаем</h3>
+                <p>
+                    В таблице авторов учитываются только опубликованные статьи.
+                    Длина текста измеряется в символах, включая пробелы.
+                </p>
+                <p>
+                    Общая средняя длина рассчитана по всем опубликованным
+                    статьям, а не как среднее показателей авторов.
+                </p>
+            </section>
+        </aside>
+
+    </div>
+</section>
 {% endblock %}

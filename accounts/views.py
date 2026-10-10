@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.core.cache import cache
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.mail import send_mail
 from django.db import IntegrityError, transaction
 from django.db.models import Avg, Count, OuterRef, Subquery, Q
@@ -131,9 +131,22 @@ def verify_email_view(request, token):
 
     return redirect("login")
 
+@login_required
 def author_statistics_view(request):
+    if not request.user.is_staff:
+        raise PermissionDenied("Статистика доступна только сотрудникам редакции.")
+
     published = Q(authored_articles__status=Article.Status.PUBLISHED)
     lengths = Article.objects.filter(author_id=OuterRef("pk"), status=Article.Status.PUBLISHED).order_by().values("author_id").annotate(value=Avg(Length("content"))).values("value")[:1]
-    authors = CustomUser.objects.filter(Q(author_profile__isnull=False) | Q(groups__name="Authors") | published).annotate(published_count=Count("authored_articles", filter=published, distinct=True), average_length=Subquery(lengths), used_tags=ArrayAgg("authored_articles__tags__name", filter=published & Q(authored_articles__tags__name__isnull=False), distinct=True, default=[])).order_by("username", "pk")
+    authors = CustomUser.objects.filter(Q(author_profile__isnull=False) | Q(groups__name="Authors") | published).annotate(published_count=Count("authored_articles", filter=published, distinct=True), average_length=Subquery(lengths), used_tags=ArrayAgg("authored_articles__tags__name", filter=published & Q(authored_articles__tags__name__isnull=False), distinct=True, default=[])).order_by("-published_count", "username", "pk")
+    overview = Article.objects.aggregate(total=Count("pk"), published=Count("pk", filter=Q(status=Article.Status.PUBLISHED)), submitted=Count("pk", filter=Q(status=Article.Status.SUBMITTED)), draft=Count("pk", filter=Q(status=Article.Status.DRAFT)), rejected=Count("pk", filter=Q(status=Article.Status.REJECTED)), average_length=Avg(Length("content"), filter=Q(status=Article.Status.PUBLISHED)))
+    overview["authors"] = authors.count()
 
-    return render_paginated(request, "author_statistics.html", authors, name="authors")
+    status_rows = [
+        {"label": "Опубликованы", "count": overview["published"], "key": "published"},
+        {"label": "На модерации", "count": overview["submitted"], "key": "submitted"},
+        {"label": "Черновики", "count": overview["draft"], "key": "draft"},
+        {"label": "Отклонены", "count": overview["rejected"], "key": "rejected"},
+    ]
+
+    return render_paginated(request, "author_statistics.html", authors, name="authors", context={"overview": overview, "status_rows": status_rows})

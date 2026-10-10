@@ -55,3 +55,43 @@ class EmailVerificationTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertFalse(User.objects.filter(username="expired_user").exists())
+
+class AuthorStatisticsAccessTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.reader = User.objects.create_user(
+            username="statistics_reader",
+            email="statistics-reader@example.com",
+            password="TestPassword123!",
+        )
+
+        cls.staff = User.objects.create_user(
+            username="statistics_staff",
+            email="statistics-staff@example.com",
+            password="TestPassword123!",
+            is_staff=True,
+        )
+
+    def test_guest_is_redirected_to_login(self):
+        response = self.client.get(reverse("author_statistics"))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            urlparse(response.url).path,
+            reverse("login"),
+        )
+
+    def test_regular_user_cannot_open_statistics(self):
+        self.client.force_login(self.reader)
+
+        response = self.client.get(reverse("author_statistics"))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_staff_can_open_statistics(self):
+        self.client.force_login(self.staff)
+
+        response = self.client.get(reverse("author_statistics"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Статистика редакции")

@@ -30,7 +30,6 @@
 
             <div class="site-menu__content">
                 <nav class="main-nav" aria-label="Основная навигация">
-                    <a href="{% url 'author_statistics' %}">Статистика</a>
                     <a href="{% url 'article_list' %}"
                        {% if request.resolver_match.url_name == 'article_list' %}
                            aria-current="page"
@@ -61,6 +60,12 @@
                                    aria-current="page"
                                {% endif %}>
                                 Модерация
+                            </a>
+                            <a href="{% url 'author_statistics' %}"
+                            {% if request.resolver_match.url_name == 'author_statistics' %}
+                                aria-current="page"
+                            {% endif %}>
+                                Статистика
                             </a>
                         {% endif %}
                     {% endif %}

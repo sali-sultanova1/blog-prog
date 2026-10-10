@@ -113,6 +113,8 @@ class RemainingFeaturesTests(TestCase):
             moderate_article(article_id=self.draft.pk, moderator=self.staff, decision="unpublished")
 
     def test_statistics_count_average_and_tags_only_published(self):
+        self.client.force_login(self.staff)
+        response = self.client.get(reverse("author_statistics"))
         second = Article.objects.create(author=self.author, title="Second", slug="second", summary="S", content="ABCDEF", status=Article.Status.PUBLISHED)
         first_tag = Tag.objects.create(name="One", slug="one")
         second_tag = Tag.objects.create(name="Two", slug="two")
@@ -137,12 +139,14 @@ class RemainingFeaturesTests(TestCase):
 
     def test_author_without_publications_is_in_statistics(self):
         Article.objects.filter(author=self.other).delete()
+        self.client.force_login(self.staff)
         response = self.client.get(reverse("author_statistics"))
+        self.assertEqual(response.status_code, 200)
         row = next(user for user in response.context["authors"] if user.pk == self.other.pk)
         self.assertEqual(row.published_count, 0)
         self.assertIsNone(row.average_length)
         self.assertEqual(row.used_tags, [])
-
+        
     def test_author_can_edit_own_profile(self):
         self.client.force_login(self.author)
         response = self.client.post(reverse("edit_profile"), {"first_name": "New", "author-specialization": "Django", "author-portfolio_url": "https://example.com/work"})
