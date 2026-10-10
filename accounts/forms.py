@@ -1,7 +1,7 @@
-from .models import CustomUser
+from .models import CustomUser, AuthorProfile
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django import forms
-
+from django.core.validators import URLValidator
 
 class RegisterForm(UserCreationForm):
     class Meta:
@@ -54,3 +54,11 @@ class ProfileForm(forms.ModelForm):
             'bio': forms.Textarea(attrs={'placeholder': 'Расскажите немного о себе…', 'rows': 5}),
             'avatar': forms.ClearableFileInput(attrs={'accept': 'image/*'}),
         }
+        
+class AuthorProfileForm(forms.ModelForm):
+    portfolio_url = forms.URLField(label="Ссылка на портфолио", required=False, validators=[URLValidator(schemes=["http", "https"])], widget=forms.URLInput(attrs={"placeholder": "https://example.com"}))
+
+    class Meta:
+        model = AuthorProfile
+        fields = ["specialization", "portfolio_url"]
+        widgets = {"specialization": forms.TextInput(attrs={"placeholder": "Например: технологии и образование"})}

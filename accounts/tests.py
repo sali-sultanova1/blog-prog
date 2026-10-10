@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.core import mail
 from urllib.parse import urlparse
@@ -7,6 +7,7 @@ from django.core.cache import cache
 
 User = get_user_model()
 
+@override_settings(CACHES={"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "login-tests"}})
 class LoginTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
@@ -23,7 +24,7 @@ class LoginTests(TestCase):
         response = self.client.post(reverse("login"), {"username": "login@example.com", "password": "testpass123"})
         self.assertRedirects(response, reverse("profile"))
 
-
+@override_settings(CACHES={"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "registration-tests"}})
 class EmailVerificationTests(TestCase):
     def test_registration_does_not_create_user_before_verification(self):
         response = self.client.post(reverse("register"), {"username": "new_user", "email": "new@example.com", "password1": "StrongPass123!", "password2": "StrongPass123!"})

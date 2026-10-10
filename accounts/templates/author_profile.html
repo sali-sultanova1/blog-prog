@@ -60,6 +60,23 @@
     </div>
 
 </section>
+<p>
+    <a href="{% url 'author_statistics' %}">Статистика всех авторов</a>
+</p>
+
+<p>
+    Средняя длина опубликованной статьи:
+    {{ stats.average_length|floatformat:0 }} символов, включая пробелы.
+</p>
+
+<p>
+    Теги:
+    {% for tag in used_tags %}
+        {{ tag.name }}{% if not forloop.last %}, {% endif %}
+    {% empty %}
+        нет
+    {% endfor %}
+</p>
 
 <div class="stats-grid">
 

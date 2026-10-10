@@ -4,7 +4,6 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from .models import Article, ModerationRecord
 
-
 @transaction.atomic
 def moderate_article(*, article_id, moderator, decision, comment=""):
     if not moderator.is_active or not moderator.is_staff:
@@ -15,7 +14,7 @@ def moderate_article(*, article_id, moderator, decision, comment=""):
     if article.status != Article.Status.SUBMITTED:
         raise ValidationError("Статья уже обработана другим модератором или больше не ожидает проверки.")
 
-    if decision not in ModerationRecord.Decision.values:
+    if decision not in (ModerationRecord.Decision.PUBLISHED, ModerationRecord.Decision.REJECTED):
         raise ValidationError("Неизвестное решение модератора.")
 
     if decision == ModerationRecord.Decision.PUBLISHED:
@@ -27,5 +26,32 @@ def moderate_article(*, article_id, moderator, decision, comment=""):
 
     article.save(update_fields=["status", "published_at", "updated_at"])
     ModerationRecord.objects.create(article=article, moderator=moderator, decision=decision, comment=comment)
+
+    return article
+
+@transaction.atomic
+def unpublish_article(*, article_id, actor):
+    if not actor.is_authenticated or not actor.is_active:
+        raise PermissionDenied("Войдите в аккаунт.")
+
+    if not (actor.is_staff or actor.has_perm("articles.change_article")):
+        raise PermissionDenied("У вас нет права снимать статьи с публикации.")
+
+    queryset = Article.objects.select_for_update()
+
+    if not actor.is_staff:
+        queryset = queryset.filter(author=actor)
+
+    article = get_object_or_404(queryset, pk=article_id)
+
+    if article.status != Article.Status.PUBLISHED:
+        raise ValidationError("Снять с публикации можно только опубликованную статью.")
+
+    article.status = Article.Status.DRAFT
+    article.published_at = None
+    article.submitted_at = None
+    article.save(update_fields=["status", "published_at", "submitted_at", "updated_at"])
+
+    ModerationRecord.objects.create(article=article, moderator=actor, decision=ModerationRecord.Decision.UNPUBLISHED, comment="Статья снята с публикации и возвращена в черновики.")
 
     return article

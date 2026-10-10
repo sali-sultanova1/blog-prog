@@ -41,6 +41,11 @@
             <div class="list-actions">
                 {% if article.status == "published" %}
                     <a href="{% url 'article_detail' article.slug %}">Читать →</a>
+
+                    <form method="post" action="{% url 'unpublish_article' article.pk %}" data-confirm="Снять статью с публикации? Для повторной публикации потребуется модерация.">
+                        {% csrf_token %}
+                        <button type="submit">Снять с публикации</button>
+                    </form>
                 {% endif %}
 
                 {% if article.status == "draft" or article.status == "rejected" %}

@@ -1,26 +1,27 @@
+import logging
 import secrets
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
+from django.contrib.postgres.aggregates import ArrayAgg
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.db import IntegrityError, transaction
-from django.db.models import Count
+from django.db.models import Avg, Count, OuterRef, Subquery, Q
+from django.db.models.functions import Length
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from articles.models import Article
-from .models import AuthorProfile, CustomUser
-from django.http import Http404
-from core.pagination import render_paginated
-import logging
-from django.core.exceptions import ValidationError
-from django.http import HttpResponse
+from articles.models import Article, Tag
 from core.cache_utils import CACHE_ERRORS, delete_cache_safely
-from .forms import ProfileForm, RegisterForm
+from core.pagination import render_paginated
+from .forms import ProfileForm, RegisterForm, AuthorProfileForm
+from .models import AuthorProfile, CustomUser
+
 
 logger = logging.getLogger(__name__)
-
 PENDING_REGISTRATION_TIMEOUT = 30 * 60
 
 def register_view(request):
@@ -63,36 +64,45 @@ def author_profile_view(request, username):
         author_profile = AuthorProfile(user=author)
 
     stats = articles.aggregate(total_likes=Count("likes", distinct=True), total_comments=Count("comments", distinct=True))
-    
-    return render_paginated(request, "author_profile.html", articles, context={"author_profile": author_profile, "stats": stats, "articles_count": articles.count()})
+    stats["average_length"] = articles.aggregate(value=Avg(Length("content")))["value"] or 0
+    used_tags = Tag.objects.filter(articles__author=author, articles__status=Article.Status.PUBLISHED).distinct().order_by("name")
+
+    return render_paginated(request, "author_profile.html", articles, context={"author_profile": author_profile, "stats": stats, "articles_count": articles.count(), "used_tags": used_tags})
 
 @login_required
 def profile_view(request):
     return render(request, "profile.html")
 
 @login_required
+@transaction.atomic
 def edit_profile_view(request):
+    user = get_object_or_404(CustomUser.objects.select_for_update(), pk=request.user.pk)
+    profile = AuthorProfile.objects.filter(user=user).first()
+    is_author = user.has_perm("articles.add_article") or profile is not None
+    data = request.POST if request.method == "POST" else None
+    files = request.FILES if request.method == "POST" else None
+    form = ProfileForm(data, files, instance=user)
+    author_form = AuthorProfileForm(data, instance=profile or AuthorProfile(user=user), prefix="author") if is_author else None
+
     if request.method == "POST":
-        form = ProfileForm(request.POST, request.FILES, instance=request.user)
+        profile_valid = form.is_valid()
+        author_valid = author_form.is_valid() if author_form is not None else True
 
-        if form.is_valid():
+        if profile_valid and author_valid:
             form.save()
-            return redirect("profile")
-    else:
-        form = ProfileForm(instance=request.user)
 
-    return render(request, "edit_profile.html", {"form": form})
+            if author_form is not None:
+                author_form.save()
+
+            messages.success(request, "Профиль обновлён.")
+            return redirect("profile")
+
+    return render(request, "edit_profile.html", {"form": form, "author_form": author_form})
 
 def send_verification_email(request, username, email, token):
     verification_url = request.build_absolute_uri(reverse("verify_email", kwargs={"token": token}))
-
-    send_mail(
-        subject="Подтверждение email — News Blog",
-        message=f"Здравствуйте, {username}!\n\nДля завершения регистрации подтвердите адрес электронной почты:\n\n{verification_url}\n\nСсылка действительна 30 минут.\n\nЕсли вы не регистрировались на News Blog, просто проигнорируйте это письмо.",
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[email],
-        fail_silently=False,
-    )
+    message = f"Здравствуйте, {username}!\n\nДля завершения регистрации подтвердите адрес электронной почты:\n\n{verification_url}\n\nСсылка действительна 30 минут.\n\nЕсли вы не регистрировались на News Blog, просто проигнорируйте это письмо."
+    send_mail(subject="Подтверждение email — News Blog", message=message, from_email=settings.DEFAULT_FROM_EMAIL, recipient_list=[email], fail_silently=False)
 
 
 def verify_email_view(request, token):
@@ -120,3 +130,10 @@ def verify_email_view(request, token):
     messages.success(request, "Email подтверждён. Аккаунт создан — теперь вы можете войти.")
 
     return redirect("login")
+
+def author_statistics_view(request):
+    published = Q(authored_articles__status=Article.Status.PUBLISHED)
+    lengths = Article.objects.filter(author_id=OuterRef("pk"), status=Article.Status.PUBLISHED).order_by().values("author_id").annotate(value=Avg(Length("content"))).values("value")[:1]
+    authors = CustomUser.objects.filter(Q(author_profile__isnull=False) | Q(groups__name="Authors") | published).annotate(published_count=Count("authored_articles", filter=published, distinct=True), average_length=Subquery(lengths), used_tags=ArrayAgg("authored_articles__tags__name", filter=published & Q(authored_articles__tags__name__isnull=False), distinct=True, default=[])).order_by("username", "pk")
+
+    return render_paginated(request, "author_statistics.html", authors, name="authors")

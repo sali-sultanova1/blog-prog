@@ -11,7 +11,10 @@ from django.db.models import Q, Count
 from .models import Article, ModerationRecord, Category, Tag
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from .services import moderate_article
+from .services import moderate_article, unpublish_article
+from django.contrib import messages
+from django.http import HttpResponse
+from django.views.decorators.http import require_POST
 from django.db.models import Prefetch
 from core.pagination import render_paginated
 from core.cache_utils import cached_list
@@ -178,3 +181,15 @@ def article_detail_view(request, slug):
 
     return render_paginated(request, "article_detail.html", comments, name="comments", per_page=20, context={"article": article, "comment_form": CommentForm(), "is_liked": is_liked, "is_bookmarked": is_bookmarked})
 
+
+@login_required
+@require_POST
+def unpublish_article_view(request, pk):
+    try:
+        unpublish_article(article_id=pk, actor=request.user)
+    except ValidationError as exc:
+        return HttpResponse(" ".join(exc.messages), status=409, content_type="text/plain; charset=utf-8")
+
+    messages.success(request, "Статья снята с публикации. После редактирования отправьте её на модерацию повторно.")
+
+    return redirect("my_articles" if request.user.has_perm("articles.view_article") else "article_list")

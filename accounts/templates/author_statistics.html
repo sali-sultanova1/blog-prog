@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Статистика авторов{% endblock %}
+
+{% block content %}
+<h1>Статистика авторов</h1>
+
+<p>
+    Учитываются только опубликованные статьи.
+    Длина — количество символов текста, включая пробелы.
+</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Автор</th>
+            <th>Публикаций</th>
+            <th>Средняя длина</th>
+            <th>Теги</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for author in authors %}
+            <tr>
+                <td>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'author_profile' author.username %}">{{ author.username }}</a>
+                    {% else %}
+                        {{ author.username }}
+                    {% endif %}
+                </td>
+
+                <td>{{ author.published_count }}</td>
+                <td>{{ author.average_length|default_if_none:0|floatformat:0 }}</td>
+
+                <td>
+                    {% for tag in author.used_tags %}
+                        {{ tag }}{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                        нет
+                    {% endfor %}
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="4">Пока нет авторов.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% include "includes/pagination.html" %}
+{% endblock %}

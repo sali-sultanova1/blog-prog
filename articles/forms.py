@@ -15,9 +15,9 @@ class ArticleForm(forms.ModelForm):
         }
 
 class ModerationForm(forms.ModelForm):
+    decision = forms.ChoiceField(label="Решение", choices=[(ModerationRecord.Decision.PUBLISHED, "Опубликовать"), (ModerationRecord.Decision.REJECTED, "Отклонить")])
+
     class Meta:
         model = ModerationRecord
-        fields = ['decision', 'comment']
-        widgets = {
-            'comment': forms.Textarea(attrs={'placeholder': 'Комментарий для автора (необязательно)…', 'rows': 5}),
-        }
+        fields = ["decision", "comment"]
+        widgets = {"comment": forms.Textarea(attrs={"placeholder": "Комментарий для автора (необязательно)…", "rows": 5})}

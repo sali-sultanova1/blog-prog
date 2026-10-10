@@ -22,6 +22,11 @@
             {% csrf_token %}
             {% include "includes/form_fields.html" %}
 
+            {% if author_form %}
+                <h2>Данные автора</h2>
+                {% include "includes/form_fields.html" with form=author_form %}
+            {% endif %}
+
             <button type="submit">
                 Сохранить изменения
             </button>

@@ -50,9 +50,10 @@ class ModerationRecord(models.Model):
     class Decision(models.TextChoices):
         PUBLISHED = "published", "Опубликовано"
         REJECTED = "rejected", "Отклонено"
+        UNPUBLISHED = "unpublished", "Снято с публикации"
 
     article = models.ForeignKey(Article, verbose_name="Статья", related_name='moderation_records', on_delete=models.CASCADE)
-    moderator = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name="Модератор", related_name='moderation_records', on_delete=models.SET_NULL, null=True)
+    moderator = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name="Инициатор решения", related_name="moderation_records", on_delete=models.SET_NULL, null=True)
     decision = models.CharField(max_length=20, choices=Decision.choices, verbose_name="Решение")
     comment = models.TextField(verbose_name="Комментарий", blank=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")

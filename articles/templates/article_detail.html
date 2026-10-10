@@ -4,7 +4,12 @@
 {% block title %}{{ article.title }}{% endblock %}
 
 {% block content %}
-
+{% if user.is_staff or user == article.author and perms.articles.change_article %}
+    <form method="post" action="{% url 'unpublish_article' article.pk %}" data-confirm="Снять статью с публикации?">
+        {% csrf_token %}
+        <button type="submit">Снять с публикации</button>
+    </form>
+{% endif %}
 <div class="article-shell">
 
     <a class="article-back" href="{% url 'article_list' %}">

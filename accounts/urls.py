@@ -3,8 +3,10 @@ from .views import register_view, profile_view, edit_profile_view, author_profil
 from django.contrib.auth.views import LoginView, LogoutView
 from .forms import UsernameOrEmailLoginForm
 from core.rate_limits import limit_posts
+from .views import author_statistics_view
 
 urlpatterns = [
+    path("statistics/", author_statistics_view, name="author_statistics"),
     path("register/", limit_posts(scope="registration", limit=5, window=600)(register_view), name="register"),
     path("login/", limit_posts(scope="login", limit=20, window=300)(LoginView.as_view(template_name="login.html", authentication_form=UsernameOrEmailLoginForm)), name="login"),
     path("verify-email/<str:token>/", verify_email_view, name="verify_email"),
